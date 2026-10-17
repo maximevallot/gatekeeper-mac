@@ -25,6 +25,15 @@ struct SettingsView: View {
                 }
             }
 
+            section("Appearance") {
+                Picker("", selection: $model.appearance) {
+                    ForEach(Appearance.allCases) { Text($0.title).tag($0) }
+                }
+                .pickerStyle(.segmented)
+                .labelsHidden()
+                .frame(width: 260)
+            }
+
             section("In exam mode") {
                 VStack(spacing: 0) {
                     ForEach(model.examApps) { app in
@@ -118,7 +127,7 @@ struct GateIcon: View {
         GeometryReader { geo in
             let side = geo.size.width
             ZStack {
-                RoundedRectangle(cornerRadius: side * 0.22, style: .continuous).fill(Theme.accent)
+                RoundedRectangle(cornerRadius: side * 0.22, style: .continuous).fill(Color(red: 0x3B / 255, green: 0x5B / 255, blue: 0xDB / 255))
                 Canvas { ctx, size in
                     let rect = CGRect(origin: .zero, size: size)
                     let path = GateMark.path(in: rect, lineWidth: side * 0.11)

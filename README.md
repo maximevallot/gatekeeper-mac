@@ -28,6 +28,11 @@ Stop it with the ■ button in Xcode, or from the popup: the "Normal day" chip, 
 - "Change something", "All rules" and "Your week" open the extension's rules page in the browser that has
   the extension (found in Brave's or Chrome's profile). The extension has no week page yet.
 
+## Appearance
+
+Light by default. Settings has Appearance: Light, Dark (deep slate, not black) or Match Mac. The colors are the
+design canvas's tokens, the same as the extension's.
+
 ## Exam mode
 
 Open the popup, click the "Normal day" chip, then Start exam mode…. Pick an end time and press Start. Until

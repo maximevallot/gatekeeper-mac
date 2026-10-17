@@ -71,7 +71,7 @@ struct TodayView: View {
                 Label("Change something", systemImage: "bubble.left")
                     .font(Theme.font(15, .semibold))
                     .frame(maxWidth: .infinity, minHeight: 46)
-                    .foregroundStyle(.white)
+                    .foregroundStyle(Theme.onAccent)
                     .background(Theme.accentFill, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
                     .contentShape(Rectangle())
             }
@@ -92,7 +92,7 @@ struct TodayView: View {
         Button(title, action: action)
             .buttonStyle(.plain)
             .font(Theme.font(13, .medium))
-            .foregroundStyle(Theme.accent)
+            .foregroundStyle(Theme.link)
             .disabled(!model.canOpenExtension)
     }
 
@@ -136,7 +136,7 @@ struct ModeChip: View {
         .font(Theme.font(12, .semibold))
         .padding(.horizontal, 11)
         .padding(.vertical, 6)
-        .foregroundStyle(examUntil == nil ? Theme.accentText : .white)
+        .foregroundStyle(examUntil == nil ? Theme.accentText : Theme.onAccent)
         .background(examUntil == nil ? Theme.accentSoft : Theme.accentFill, in: Capsule())
         .contentShape(Capsule())
     }

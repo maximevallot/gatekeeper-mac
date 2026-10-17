@@ -126,7 +126,7 @@ struct PrimaryButton: View {
             Label(title, systemImage: systemImage)
                 .font(Theme.font(15, .semibold))
                 .frame(maxWidth: .infinity, minHeight: 46)
-                .foregroundStyle(.white)
+                .foregroundStyle(Theme.onAccent)
                 .background(color, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
                 .contentShape(Rectangle())
         }

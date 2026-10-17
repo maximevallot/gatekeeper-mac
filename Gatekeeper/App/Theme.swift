@@ -1,21 +1,28 @@
 import SwiftUI
 import AppKit
 
-// The colors of the design canvas (~/brain/outputs/gatekeeper-simplified-design/Main.dc.html), with a dark
-// variant for each so the popup follows the Mac's appearance.
+// The colors of the design canvas (~/brain/outputs/gatekeeper-simplified-design/Main.dc.html for light,
+// TodayDark.dc.html for dark), the same tokens the extension uses. Light is the default; dark is deep slate,
+// not black. Which one shows is the Appearance setting (AppModel.appearance).
 enum Theme {
-    static let accent = dynamic(light: 0x3B5BDB, dark: 0x6F8BFF)
-    /// Behind white text: darker than `accent` in dark mode so the text stays readable.
-    static let accentFill = dynamic(light: 0x3B5BDB, dark: 0x4263EB)
-    static let accentText = dynamic(light: 0x2B44A8, dark: 0xB7C4FF)
-    static let accentSoft = dynamic(light: 0xEEF1FD, dark: 0x252C4A)
-    static let closed = dynamic(light: 0xB42318, dark: 0xFF8A7E)
-    static let closedSoft = dynamic(light: 0xF3C6C1, dark: 0x5A2A26)
-    static let track = dynamic(light: 0xE3E6EE, dark: 0x30343F)
-    static let card = dynamic(light: 0xF6F7FB, dark: 0x22252E)
-    static let background = dynamic(light: 0xFFFFFF, dark: 0x16181E)
-    static let text = dynamic(light: 0x161A23, dark: 0xECEEF3)
-    static let muted = dynamic(light: 0x5B6270, dark: 0x9AA1AF)
+    static let accent = dynamic(light: 0x3B5BDB, dark: 0x7D96FF)
+    /// Behind the main button's text and icon.
+    static let accentFill = dynamic(light: 0x3B5BDB, dark: 0x7D96FF)
+    /// Text and icons on accentFill.
+    static let onAccent = dynamic(light: 0xFFFFFF, dark: 0x10131F)
+    static let link = dynamic(light: 0x3B5BDB, dark: 0x9FB2FF)
+    static let accentText = dynamic(light: 0x2B44A8, dark: 0xAFC0FF)
+    static let accentSoft = dynamic(light: 0xEEF1FD, dark: 0x26304F)
+    static let closed = dynamic(light: 0xB42318, dark: 0xFF8A7A)
+    static let closedSoft = dynamic(light: 0xF3C6C1, dark: 0x5A2F2B)
+    /// line: ring tracks and dividers.
+    static let track = dynamic(light: 0xE3E6EE, dark: 0x2E333D)
+    /// ground: the goal card and other inset blocks.
+    static let card = dynamic(light: 0xF6F7FB, dark: 0x171A20)
+    /// surface: the popup and the settings window.
+    static let background = dynamic(light: 0xFFFFFF, dark: 0x1F232B)
+    static let text = dynamic(light: 0x161A23, dark: 0xECEFF4)
+    static let muted = dynamic(light: 0x5B6270, dark: 0xA3AAB7)
 
     static func font(_ size: CGFloat, _ weight: Font.Weight = .regular) -> Font {
         .system(size: size, weight: weight)

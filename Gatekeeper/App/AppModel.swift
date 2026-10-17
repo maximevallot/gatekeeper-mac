@@ -26,6 +26,11 @@ final class AppModel: ObservableObject {
         didSet { defaults.set(browserAction.rawValue, forKey: Keys.browserAction); applyGuardSettings() }
     }
 
+    /// Light by default; Maxime: "i prefer white honestly but i guess people differ, black is just too gloomy".
+    @Published var appearance: Appearance {
+        didSet { defaults.set(appearance.rawValue, forKey: Keys.appearance); appearance.apply() }
+    }
+
     @Published private(set) var opensAtLogin = SMAppService.mainApp.status == .enabled
     @Published private(set) var loginItemNeedsApproval = SMAppService.mainApp.status == .requiresApproval
 
@@ -39,6 +44,7 @@ final class AppModel: ObservableObject {
         static let examApps = "examApps"
         static let browserAction = "browserAction"
         static let firstRunDone = "firstRunDone"
+        static let appearance = "appearance"
     }
 
     static var folder: URL {
@@ -51,6 +57,8 @@ final class AppModel: ObservableObject {
     init() {
         examApps = Self.load([ExamApp].self, Keys.examApps) ?? ExamApp.defaults
         browserAction = ExamAction(rawValue: defaults.string(forKey: Keys.browserAction) ?? "") ?? .hide
+        appearance = Appearance(rawValue: defaults.string(forKey: Keys.appearance) ?? "") ?? .light
+        appearance.apply()
         if let t = defaults.object(forKey: Keys.examUntil) as? Double { localExamUntil = Date(timeIntervalSince1970: t) }
 
         if let found = Browsers.findExtension() {
@@ -210,5 +218,27 @@ final class AppModel: ObservableObject {
     private static func load<T: Decodable>(_ type: T.Type, _ key: String) -> T? {
         guard let data = UserDefaults.standard.data(forKey: key) else { return nil }
         return try? JSONDecoder().decode(type, from: data)
+    }
+}
+
+/// The Appearance setting: the popup and the settings window in light, in dark, or as the Mac is set.
+enum Appearance: String, CaseIterable, Identifiable {
+    case light, dark, system
+    var id: String { rawValue }
+
+    var title: String {
+        switch self {
+        case .light: return "Light"
+        case .dark: return "Dark"
+        case .system: return "Match Mac"
+        }
+    }
+
+    @MainActor func apply() {
+        switch self {
+        case .light: NSApp?.appearance = NSAppearance(named: .aqua)
+        case .dark: NSApp?.appearance = NSAppearance(named: .darkAqua)
+        case .system: NSApp?.appearance = nil
+        }
     }
 }
