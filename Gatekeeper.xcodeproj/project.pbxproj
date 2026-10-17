@@ -28,6 +28,7 @@
 		A6CCB5E0C017B734CA9C1FDE /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 1EB5E9079F92D757277F3E04 /* Assets.xcassets */; };
 		B8CE4A23E2F905E37BF0714E /* LogicTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 48C878059E3F64428F09EB6A /* LogicTests.swift */; };
 		B9BFBBE427EAB2999AA02308 /* TodayView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7FCFD727FB07F24DE23DD631 /* TodayView.swift */; };
+		C8734822F84893974BF3864E /* extension-snapshot.json in Resources */ = {isa = PBXBuildFile; fileRef = 7B4AF551EFA3B629B4660751 /* extension-snapshot.json */; };
 		E2B2677BCCE31A34E73C8B5D /* gatekeeper-bridge in Embed Dependencies */ = {isa = PBXBuildFile; fileRef = 9AA7DF378B0737E7FAEA218B /* gatekeeper-bridge */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		FD254DAF6FE3B54F0A96D28E /* NativeHost.swift in Sources */ = {isa = PBXBuildFile; fileRef = 35C74CD4B33CD555F9A4ECE5 /* NativeHost.swift */; };
 /* End PBXBuildFile section */
@@ -68,6 +69,7 @@
 		69682C2E07CCDA217A70EC27 /* Browsers.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Browsers.swift; sourceTree = "<group>"; };
 		723E09E9D7FE2E5D497DFBCD /* AppModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppModel.swift; sourceTree = "<group>"; };
 		72B47D6CA449EF6384574998 /* ExamViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExamViews.swift; sourceTree = "<group>"; };
+		7B4AF551EFA3B629B4660751 /* extension-snapshot.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = "extension-snapshot.json"; sourceTree = "<group>"; };
 		7FCFD727FB07F24DE23DD631 /* TodayView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TodayView.swift; sourceTree = "<group>"; };
 		800DDD4869C0461865FD0860 /* Theme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Theme.swift; sourceTree = "<group>"; };
 		9AA7DF378B0737E7FAEA218B /* gatekeeper-bridge */ = {isa = PBXFileReference; includeInIndex = 0; path = "gatekeeper-bridge"; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -87,6 +89,14 @@
 				F5C519B06442447AC49CFCD8 /* main.swift */,
 			);
 			path = Bridge;
+			sourceTree = "<group>";
+		};
+		0B51A1838B16085F0142B5A1 /* Fixtures */ = {
+			isa = PBXGroup;
+			children = (
+				7B4AF551EFA3B629B4660751 /* extension-snapshot.json */,
+			);
+			path = Fixtures;
 			sourceTree = "<group>";
 		};
 		2AE85B2655E96E87891EDC7F /* Exam */ = {
@@ -121,6 +131,7 @@
 			isa = PBXGroup;
 			children = (
 				48C878059E3F64428F09EB6A /* LogicTests.swift */,
+				0B51A1838B16085F0142B5A1 /* Fixtures */,
 			);
 			path = Tests;
 			sourceTree = "<group>";
@@ -208,6 +219,7 @@
 			buildConfigurationList = 96C001DECD0C1767B152B78F /* Build configuration list for PBXNativeTarget "GatekeeperTests" */;
 			buildPhases = (
 				5D1B15B72FD56F0624FBEBC0 /* Sources */,
+				8A6BD3007C581C35EA5A8C6D /* Resources */,
 			);
 			buildRules = (
 			);
@@ -287,6 +299,14 @@
 			buildActionMask = 2147483647;
 			files = (
 				A6CCB5E0C017B734CA9C1FDE /* Assets.xcassets in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		8A6BD3007C581C35EA5A8C6D /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				C8734822F84893974BF3864E /* extension-snapshot.json in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

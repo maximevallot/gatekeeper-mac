@@ -38,9 +38,20 @@ final class SnapshotTests: XCTestCase {
     func testStatusWinsOverMinutes() {
         // A pass or a video bucket can leave minutes that disagree with the status; the status is what counts.
         var s = Snapshot.sample()
-        s.kinds = [.init(kind: "video", label: "Video", short: nil, minutes: 20, left: 12, status: "spent", fraction: 0.6)]
+        s.kinds = [.init(kind: "video", label: "Video", short: nil, minutes: 20, left: 12, status: "spent", fraction: 0.6, exam: nil)]
         XCTAssertEqual(Ring.rings(from: s).first?.state, .spent(reopens: s.reopens))
         XCTAssertEqual(Ring.rings(from: s).first?.name, "Video")
+    }
+
+    /// A snapshot made by the extension's own engine (~/gatekeeper-app 94e02f5, engine.snapshot()) with exam mode on.
+    func testDecodesTheExtensionsRealSnapshot() throws {
+        let url = Bundle(for: SnapshotTests.self).url(forResource: "extension-snapshot", withExtension: "json")!
+        let s = try JSONDecoder().decode(Snapshot.self, from: Data(contentsOf: url))
+        XCTAssertEqual(s.v, 1)
+        XCTAssertEqual(s.pages?.exam, "pages/rules.html#exam")
+        let examEnd = Date(timeIntervalSince1970: s.exam!.until / 1000)
+        // In exam mode every kind is closed until the exam ends, not all day.
+        XCTAssertEqual(Ring.rings(from: s).map(\.state), Array(repeating: .spent(reopens: examEnd), count: 3))
     }
 
     func testNextDayStart() {

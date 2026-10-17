@@ -12,6 +12,8 @@ struct Snapshot: Codable, Equatable {
         var left: Int
         var status: String // "open", "spent" or "closed"
         var fraction: Double?
+        /// Closed by exam mode rather than by its own budget.
+        var exam: Bool?
         var id: String { kind }
     }
 
@@ -28,6 +30,13 @@ struct Snapshot: Codable, Equatable {
         var goal: String?
     }
 
+    /// A new install's first week: every kind counted, nothing blocked.
+    struct Watch: Codable, Equatable {
+        var day: Int?
+        var of: Int?
+        var until: Double?
+    }
+
     var v: Int
     var at: Double
     var browser: String?
@@ -38,6 +47,7 @@ struct Snapshot: Codable, Equatable {
     var waiting: Bool?
     var kinds: [Kind]
     var exam: Exam?
+    var watch: Watch?
 
     var reopens: Date { Date(timeIntervalSince1970: reopensAt / 1000) }
 }
@@ -50,11 +60,11 @@ extension Snapshot {
             goal: "Finish problem set 4 by Thursday",
             reopensAt: Day.nextStart(after: now, hour: 4).timeIntervalSince1970 * 1000, waiting: false,
             kinds: [
-                Kind(kind: "social", label: "Social media", short: "Social", minutes: 15, left: 9, status: "open", fraction: 0.6),
-                Kind(kind: "video", label: "Video", short: "Video", minutes: 20, left: 0, status: "spent", fraction: 0),
-                Kind(kind: "games", label: "Games", short: "Games", minutes: 0, left: 0, status: "closed", fraction: 0),
+                Kind(kind: "social", label: "Social media", short: "Social", minutes: 15, left: 9, status: "open", fraction: 0.6, exam: nil),
+                Kind(kind: "video", label: "Video", short: "Video", minutes: 20, left: 0, status: "spent", fraction: 0, exam: nil),
+                Kind(kind: "games", label: "Games", short: "Games", minutes: 0, left: 0, status: "closed", fraction: 0, exam: nil),
             ],
-            exam: nil)
+            exam: nil, watch: nil)
     }
 }
 
@@ -75,6 +85,9 @@ struct Ring: Identifiable, Equatable {
             let name = k.short ?? k.label
             switch k.status {
             case "closed":
+                if k.exam == true, let exam = s.exam {
+                    return Ring(id: k.kind, name: name, state: .spent(reopens: Date(timeIntervalSince1970: exam.until / 1000)))
+                }
                 return Ring(id: k.kind, name: name, state: .closedAllDay)
             case "spent":
                 return Ring(id: k.kind, name: name, state: .spent(reopens: s.reopens))

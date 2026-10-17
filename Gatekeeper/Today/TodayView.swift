@@ -50,6 +50,11 @@ struct TodayView: View {
                     .font(Theme.font(14)).foregroundStyle(Theme.muted)
                     .frame(maxWidth: .infinity, minHeight: 80)
                     .help("A new day began. The browser sends today's minutes when it is next open.")
+            } else if model.rings.isEmpty, let watch = model.snapshot.watch {
+                Text(watch.day.map { d in "Watch week · day \(d) of \(watch.of ?? 7)" } ?? "Watch week")
+                    .font(Theme.font(14)).foregroundStyle(Theme.muted)
+                    .frame(maxWidth: .infinity, minHeight: 80)
+                    .help("This first week counts your time and blocks nothing. Your limits come from it.")
             } else if model.rings.isEmpty {
                 Text("Nothing watched").font(Theme.font(14)).foregroundStyle(Theme.muted)
                     .frame(maxWidth: .infinity, minHeight: 80)

@@ -70,7 +70,7 @@ The engine's `todaySummary(state, now)`, plus who sent it, the pages, and exam m
   "browser": "com.brave.Browser",
   "extensionId": "kfikbbdocggfgfhaegkgkfomhmacdbjp",
   "pages": { "today": "pages/popup.html", "rules": "pages/rules.html", "talk": "pages/talk.html",
-             "week": "pages/week.html", "exam": null },
+             "week": "pages/week.html", "exam": "pages/rules.html#exam" },
   "goal": "Finish problem set 4 by Thursday",
   "reopensAt": 1760774400000,
   "waiting": true,
@@ -79,7 +79,8 @@ The engine's `todaySummary(state, now)`, plus who sent it, the pages, and exam m
     { "kind": "video",  "label": "Video",        "short": "Video",  "minutes": 20, "left": 0, "status": "spent", "fraction": 0 },
     { "kind": "games",  "label": "Games",        "short": "Games",  "minutes": 0,  "left": 0, "status": "closed", "fraction": 0 }
   ],
-  "exam": { "until": 1760742000000, "goal": "15.425 midterm, Wednesday 8:30" }
+  "exam": { "until": 1760742000000, "goal": "15.425 midterm, Wednesday 8:30" },
+  "watch": null
 }
 ```
 
@@ -91,7 +92,10 @@ The engine's `todaySummary(state, now)`, plus who sent it, the pages, and exam m
 - `pages` are paths inside the extension; the app opens `chrome-extension://<extensionId>/<path>` in
   `browser`: "Change something" opens `talk`, "All rules" `rules`, "Your week" `week`, and "End exam mode
   early" `exam`. A missing page falls back to `rules`.
-- `exam` is null when exam mode is off.
+- `exam` is null when exam mode is off. While it is on, every kind comes as `closed` with `"exam": true`;
+  the Mac shows those locked "till" `exam.until`, not "all day".
+- `watch` is null, or `{ day, of, until }` during a new install's watch-only week, when `kinds` is empty; the
+  Mac then says "Watch week · day 2 of 7".
 - `browser` is the bundle ID of the browser running the extension. The bridge fills it from its parent process
   and `extensionId` from the calling origin when the extension leaves them out.
 
