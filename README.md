@@ -37,6 +37,18 @@ Mail in the Dock: it hides again and a small notice at the top of the screen say
 the time comes, the apps it hid come back on their own. To end early, click the chip, then **End exam mode
 early…**, and type the sentence shown.
 
+## Connect it to the extension
+
+The extension on `~/gatekeeper-app` main (from `94e02f5`) can send today to the Mac. To turn it on:
+
+1. Run Gatekeeper from Xcode once (above). Each launch tells Brave where the bridge is.
+2. In Brave, go to `brave://extensions` and click the round reload arrow on Gatekeeper.
+3. Open Gatekeeper's rules page, go to Settings, turn on **Mac app**, and accept Brave's prompt
+   ("Communicate with cooperating native applications").
+4. Within a minute the popup loses "sample" and shows your real rings and goal.
+
+If the switch says "Reload Gatekeeper once", reload it as in step 2.
+
 ## What it shows
 
 - Real data comes from the extension through Chrome native messaging ([docs/contract.md](docs/contract.md)):
