@@ -29,8 +29,11 @@ Stop it with the ■ button in Xcode, or from the popup: the "Normal day" chip, 
   Until the extension sends, Today shows the design's sample day and says "sample" next to the title.
 - "Change something" opens the extension's talk page, "All rules" its rules and "Your week" its week, in the
   browser that has the extension.
-- Starting exam mode on the Mac, or ending it with the sentence, is passed to the extension the next time it
-  calls the bridge, within a minute.
+- The rings show exactly what the extension decided. When the day turns over and the browser has not sent the
+  new day yet, Today says "Waiting for the browser" rather than reopening anything on the Mac's own clock.
+- Starting exam mode on the Mac is passed to the extension the next time it calls the bridge, within a minute.
+  The Mac only ever asks to tighten: ending exam mode early happens in the extension, where the sentence is
+  typed, and "End exam mode early" opens that page.
 
 ## Appearance
 
@@ -41,7 +44,8 @@ design canvas's tokens, the same as the extension's.
 
 Open the popup, click the "Normal day" chip, then Start exam mode…. Pick an end time and press Start. Until
 then, the apps on the list and the other browsers are hidden (or quit, if set so in Settings) at once, whenever
-they are opened or brought forward, and every two seconds. Ending early takes typing the sentence. While exam
+they are opened or brought forward, and every two seconds. Ending early takes typing the sentence, on the Mac while the extension is not connected, and in the extension
+once it holds exam mode. While exam
 mode is on, Quit is greyed out and apps can be added to the list but not taken off.
 
 Hiding and quitting other apps needs no macOS permission, so there is no permission screen.

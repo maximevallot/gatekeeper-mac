@@ -8,8 +8,8 @@ session that owns `~/gatekeeper-app`. Until the extension sends, the Mac shows t
 
 The extension stays the one home of the rules. Its engine already decides what a change is (tighter: now;
 looser: next morning at 4:00), and that logic should not be written twice. The Mac app never edits a rule. It
-shows today and enforces exam mode on the Mac. Anything the Mac wants changed (start exam mode, end it with the
-sentence) is a request that the extension's engine applies or refuses.
+shows today and enforces exam mode on the Mac. The only thing the Mac asks for is a tightening (start or extend exam
+mode), a request that the extension's engine applies; anything looser is done in the extension.
 
 ## The route: Chrome native messaging, one message at a time
 
@@ -54,7 +54,13 @@ extension (Brave or Chrome)                     Mac
 
 ## The contract, version 1
 
+Revised on 2026-10-17 after the extension session's review (`gatekeeper-mac-contract-review.md` in the shared
+notes folder): the Mac sends no loosening, the snapshot carries what the engine decided rather than raw
+counters, and the Mac never decides on its own clock that a new day began.
+
 ### Extension → bridge: `snapshot`
+
+The engine's `todaySummary(state, now)`, plus who sent it, the pages, and exam mode.
 
 ```json
 {
@@ -63,47 +69,49 @@ extension (Brave or Chrome)                     Mac
   "at": 1760716800000,
   "browser": "com.brave.Browser",
   "extensionId": "kfikbbdocggfgfhaegkgkfomhmacdbjp",
-  "pages": { "rules": "pages/rules.html", "talk": "pages/talk.html", "week": "pages/week.html" },
+  "pages": { "today": "pages/popup.html", "rules": "pages/rules.html", "talk": "pages/talk.html",
+             "week": "pages/week.html", "exam": null },
   "goal": "Finish problem set 4 by Thursday",
-  "dayStart": 4,
-  "endsAt": 1760774400000,
+  "reopensAt": 1760774400000,
+  "waiting": true,
   "kinds": [
-    { "kind": "social", "label": "Social media", "minutes": 15, "usedSeconds": 360 },
-    { "kind": "video",  "label": "Video",        "minutes": 20, "usedSeconds": 1200 },
-    { "kind": "games",  "label": "Games",        "minutes": 0,  "usedSeconds": 0 }
+    { "kind": "social", "label": "Social media", "short": "Social", "minutes": 15, "left": 9, "status": "open", "fraction": 0.6 },
+    { "kind": "video",  "label": "Video",        "short": "Video",  "minutes": 20, "left": 0, "status": "spent", "fraction": 0 },
+    { "kind": "games",  "label": "Games",        "short": "Games",  "minutes": 0,  "left": 0, "status": "closed", "fraction": 0 }
   ],
-  "pending": { "from": 1760774400000 },
   "exam": { "until": 1760742000000, "goal": "15.425 midterm, Wednesday 8:30" }
 }
 ```
 
-- Times are milliseconds since 1970, as the engine keeps them. `endsAt` is `usage.endsAt`.
-- `kinds` lists only watched kinds, in the order the rules page shows them. `minutes` 0 means closed all day.
-  `usedSeconds` is `usage.seconds[kind]`.
+- Times are milliseconds since 1970, as the engine keeps them. `reopensAt` is `usage.endsAt`.
+- `kinds`, `goal`, `reopensAt` and `waiting` (a loosening waits for the morning) are `todaySummary`'s, as is.
+  `status` is "open", "spent" or "closed"; the Mac shows exactly that and works nothing out from minutes,
+  so passes, video-rule buckets and the clock floor stay the engine's business. Other fields of
+  `todaySummary` may be sent; the Mac ignores what it does not know.
 - `pages` are paths inside the extension; the app opens `chrome-extension://<extensionId>/<path>` in
-  `browser`: "Change something" opens `talk`, "All rules" `rules`, "Your week" `week`. A missing page falls
-  back to `rules`.
-- `pending` is null or the moment a waiting loosening applies. `exam` is null when exam mode is off.
-- `browser` is the bundle ID of the browser running the extension. The bridge can also find it from its parent
-  process, so the extension may leave it out.
+  `browser`: "Change something" opens `talk`, "All rules" `rules`, "Your week" `week`, and "End exam mode
+  early" `exam`. A missing page falls back to `rules`.
+- `exam` is null when exam mode is off.
+- `browser` is the bundle ID of the browser running the extension. The bridge fills it from its parent process
+  and `extensionId` from the calling origin when the extension leaves them out.
 
 ### Bridge → extension: the reply
 
 ```json
 { "ok": true, "v": 1, "requests": [
-  { "id": "6F1C…", "type": "exam.start", "until": 1760742000000, "goal": "15.425 midterm" },
-  { "id": "9A20…", "type": "exam.end", "sentence": "I am choosing to stop preparing for my exam" }
+  { "id": "6F1C…", "type": "exam.start", "until": 1760742000000 }
 ] }
 ```
 
-- `exam.start`: a tightening, applied at once. If exam mode is already on, the later `until` wins.
-- `exam.end`: applied only if `sentence` is the end sentence, typed by the user. Anything else is refused.
-- Each request is handed over once. The result shows in the next snapshot; if the Mac does not see an
-  `exam.start` there within two minutes of handing it over, it queues it again.
-- After `exam.end`, the Mac stops enforcing at once and ignores a snapshot's `exam` whose `until` is not
-  later than the one it ended, so a snapshot sent before the extension applied the end does not restart it.
-- Errors: `{ "ok": false, "error": "bad_origin" | "bad_message" | "unknown_version" | "write_failed" }`. The extension ignores them and tries
-  again at the next change.
+- The Mac only ever asks to tighten. `exam.start` starts exam mode, or extends it if the later `until` is this
+  one, and applies at once. Any process running as the user could write a request file, so a request that
+  loosens anything would be a way around the rules; there is none.
+- Ending exam mode early happens only in the extension, with the sentence typed there. The Mac's "End exam
+  mode early" opens `pages.exam`.
+- Each request is handed over once. If the next snapshots do not show an `exam.start` within two minutes of
+  handing it over, the Mac queues it again.
+- Errors: `{ "ok": false, "error": "bad_origin" | "bad_message" | "unknown_version" | "write_failed" }`. The
+  extension ignores them and tries again at the next change.
 
 ### What stays on the Mac
 
@@ -112,9 +120,20 @@ only on the Mac. While exam mode is on, the Mac lets an app be added to the list
 
 ### What the Mac does with the snapshot
 
-- The bridge fills `extensionId` from the calling origin and `browser` from its parent process when the
-  extension leaves them out, and answers only the extension IDs listed in the host manifest.
-- A ring per kind: minutes left, or a lock with "till 4:00" when the budget is spent, or "all day" at 0
-  minutes. A snapshot older than its `endsAt` shows full budgets (a new day began).
-- Exam mode is on if the snapshot says so or if the Mac started it and the extension has not answered yet; the
-  later `until` wins.
+- A ring per kind, from `status`: "open" shows `left` and `fraction`, "spent" a lock and "till" `reopensAt`,
+  "closed" a lock and "all day".
+- Once its clock passes `reopensAt` with no newer snapshot, the Mac shows "Waiting for the browser" instead of
+  rings. It never reopens anything on its own clock (QA finding H2).
+- Exam mode is on while the snapshot says so. A Mac-started exam mode is enforced on the Mac at once and
+  handed to the extension; once a snapshot shows it, the extension's is the one in force.
+- With no extension connected (no `today.json`), exam mode lives on the Mac alone, and ending it early takes the
+  sentence typed on the Mac.
+
+### What the extension still needs (from the review)
+
+- An exam mode in the engine, in `state.rules` so `tighten()` covers it, started through `proposeRules`.
+- `nativeMessaging` under `optional_permissions`, checked against Brave 155 and Chrome 116, with a listing
+  justification and a claims-list row.
+- A line in the 0.2.0 privacy text, the store's data answers and a "Mac app" consent list: `today.json` holds
+  the goal, minutes and exam goal on the Mac, readable by any app running as the user, and goes to no server.
+- Calls to the bridge from `syncBlocking`'s change detection, not from the 2-second tick.

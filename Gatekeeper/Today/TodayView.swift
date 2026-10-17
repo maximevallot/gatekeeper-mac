@@ -45,7 +45,12 @@ struct TodayView: View {
                 modeMenu
             }
 
-            if model.rings.isEmpty {
+            if model.isStale {
+                Text("Waiting for the browser")
+                    .font(Theme.font(14)).foregroundStyle(Theme.muted)
+                    .frame(maxWidth: .infinity, minHeight: 80)
+                    .help("A new day began. The browser sends today's minutes when it is next open.")
+            } else if model.rings.isEmpty {
                 Text("Nothing watched").font(Theme.font(14)).foregroundStyle(Theme.muted)
                     .frame(maxWidth: .infinity, minHeight: 80)
             } else {
@@ -99,7 +104,9 @@ struct TodayView: View {
     private var modeMenu: some View {
         Menu {
             if model.examOn {
-                Button("End exam mode early…") { screen = .endExam }
+                Button("End exam mode early…") {
+                    if model.examEndsInExtension { model.openExamPage() } else { screen = .endExam }
+                }
             } else {
                 Button("Start exam mode…") { screen = .startExam }
             }
