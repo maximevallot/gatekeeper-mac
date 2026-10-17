@@ -67,7 +67,7 @@ struct TodayView: View {
                 .background(Theme.card, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
             }
 
-            Button(action: model.openRules) {
+            Button(action: model.openTalk) {
                 Label("Change something", systemImage: "bubble.left")
                     .font(Theme.font(15, .semibold))
                     .frame(maxWidth: .infinity, minHeight: 46)

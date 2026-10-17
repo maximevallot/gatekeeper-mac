@@ -13,7 +13,14 @@ targets:
   Gatekeeper:
     type: application
     platform: macOS
-    sources: [Gatekeeper]
+    sources: [Gatekeeper, Shared]
+    dependencies:
+      # The bridge the extension calls, inside the app at Contents/MacOS/gatekeeper-bridge.
+      - target: gatekeeper-bridge
+        embed: true
+        codeSign: true
+        copy:
+          destination: executables
     info:
       path: Gatekeeper/Info.plist
       properties:
@@ -35,3 +42,16 @@ targets:
         ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME: AccentColor
         GENERATE_INFOPLIST_FILE: NO
         COMBINE_HIDPI_IMAGES: YES
+  gatekeeper-bridge:
+    type: tool
+    platform: macOS
+    sources: [Bridge, Shared]
+    settings:
+      base:
+        PRODUCT_NAME: gatekeeper-bridge
+        PRODUCT_BUNDLE_IDENTIFIER: com.gatekeeper.mac.bridge
+        CODE_SIGN_STYLE: Manual
+        CODE_SIGN_IDENTITY: "-"
+        DEVELOPMENT_TEAM: ""
+        ENABLE_HARDENED_RUNTIME: NO
+        SKIP_INSTALL: YES

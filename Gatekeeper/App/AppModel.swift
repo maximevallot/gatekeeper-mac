@@ -38,6 +38,12 @@ final class AppModel: ObservableObject {
     private let guardian = ExamGuard()
     private var timer: Timer?
     private var snapshotDate: Date?
+    /// The end (ms) of the exam mode last ended with the sentence. A snapshot's exam mode that ends no later is
+    /// the same one, sent before the extension applied the end, and is ignored.
+    private var endedUntil: Double {
+        didSet { defaults.set(endedUntil, forKey: Keys.examEndedUntil) }
+    }
+    private var lastStartQueued: Date?
 
     private enum Keys {
         static let examUntil = "examUntil"
@@ -45,18 +51,13 @@ final class AppModel: ObservableObject {
         static let browserAction = "browserAction"
         static let firstRunDone = "firstRunDone"
         static let appearance = "appearance"
+        static let examEndedUntil = "examEndedUntil"
     }
-
-    static var folder: URL {
-        FileManager.default.homeDirectoryForCurrentUser
-            .appendingPathComponent("Library/Application Support/Gatekeeper", isDirectory: true)
-    }
-
-    static var todayFile: URL { folder.appendingPathComponent("today.json") }
 
     init() {
         examApps = Self.load([ExamApp].self, Keys.examApps) ?? ExamApp.defaults
         browserAction = ExamAction(rawValue: defaults.string(forKey: Keys.browserAction) ?? "") ?? .hide
+        endedUntil = defaults.double(forKey: Keys.examEndedUntil)
         appearance = Appearance(rawValue: defaults.string(forKey: Keys.appearance) ?? "") ?? .light
         appearance.apply()
         if let t = defaults.object(forKey: Keys.examUntil) as? Double { localExamUntil = Date(timeIntervalSince1970: t) }
@@ -65,6 +66,7 @@ final class AppModel: ObservableObject {
             extensionBrowser = found.bundleID
             extensionID = found.extensionID
         }
+        HostInstaller.install(extraIDs: [extensionID].compactMap { $0 })
         reloadSnapshot()
         applyGuardSettings()
         update()
@@ -89,12 +91,13 @@ final class AppModel: ObservableObject {
         now = Date()
         reloadSnapshot()
         if let until = localExamUntil, until <= now { localExamUntil = nil }
+        resendExamStartIfLost()
         guardian.setActive(examOn)
         guardian.sweep()
     }
 
     private func reloadSnapshot() {
-        let url = Self.todayFile
+        let url = NativeHost.todayFile
         guard let modified = (try? FileManager.default.attributesOfItem(atPath: url.path))?[.modificationDate] as? Date
         else {
             if !isSample { isSample = true; snapshot = .sample() }
@@ -106,7 +109,7 @@ final class AppModel: ObservableObject {
               s.v == 1 else { return }
         snapshot = s
         isSample = false
-        if let b = s.browser { extensionBrowser = b }
+        if let b = s.browser, Browsers.known[b] != nil { extensionBrowser = b }
         if let id = s.extensionId { extensionID = id }
         applyGuardSettings()
     }
@@ -129,10 +132,11 @@ final class AppModel: ObservableObject {
 
     var canOpenExtension: Bool { extensionBrowser != nil && extensionID != nil }
 
-    func openRules() { openPage(snapshot.pages?.rules ?? "pages/rules.html") }
-
-    /// The extension has no week page yet; until it does, this opens the rules page.
-    func openWeek() { openPage(snapshot.pages?.week ?? snapshot.pages?.rules ?? "pages/rules.html") }
+    // The pages the extension names in its snapshot; without one, the rules page, which every version has.
+    private var rulesPage: String { snapshot.pages?.rules ?? "pages/rules.html" }
+    func openTalk() { openPage(snapshot.pages?.talk ?? rulesPage) }
+    func openRules() { openPage(rulesPage) }
+    func openWeek() { openPage(snapshot.pages?.week ?? rulesPage) }
 
     private func openPage(_ page: String) {
         guard let browser = extensionBrowser, let id = extensionID else { return }
@@ -143,7 +147,7 @@ final class AppModel: ObservableObject {
 
     /// The later of the Mac's exam mode and the extension's: whichever ends last is in force.
     var examUntil: Date? {
-        let fromExtension = snapshot.exam.map { Date(timeIntervalSince1970: $0.until / 1000) }
+        let fromExtension = snapshot.exam.flatMap { $0.until > endedUntil ? Date(timeIntervalSince1970: $0.until / 1000) : nil }
         let latest = [localExamUntil, isSample ? nil : fromExtension].compactMap { $0 }.max()
         guard let until = latest, until > now else { return nil }
         return until
@@ -155,6 +159,7 @@ final class AppModel: ObservableObject {
     func startExam(until: Date) {
         guard until > Date() else { return }
         localExamUntil = max(until, localExamUntil ?? until)
+        queueExamStart()
         update()
     }
 
@@ -162,9 +167,32 @@ final class AppModel: ObservableObject {
     func endExam(sentence: String) -> Bool {
         let typed = sentence.trimmingCharacters(in: .whitespacesAndNewlines).trimmingCharacters(in: CharacterSet(charactersIn: "."))
         guard typed.caseInsensitiveCompare(Self.endSentence) == .orderedSame else { return false }
+        if let until = examUntil { endedUntil = max(endedUntil, until.timeIntervalSince1970 * 1000) }
         localExamUntil = nil
+        Requests.removeAll(ofType: "exam.start")
+        Requests.queue(["type": "exam.end", "sentence": Self.endSentence])
         update()
         return true
+    }
+
+    // MARK: Requests to the extension (docs/contract.md)
+
+    private func queueExamStart() {
+        guard let until = localExamUntil else { return }
+        Requests.removeAll(ofType: "exam.start")
+        Requests.queue(["type": "exam.start", "until": (until.timeIntervalSince1970 * 1000).rounded()])
+        lastStartQueued = Date()
+    }
+
+    /// The extension shows the Mac's exam mode in its next snapshot. If it has not two minutes after the request
+    /// was handed over (the extension is talking to the bridge, the request file is gone), queue it again.
+    private func resendExamStartIfLost() {
+        guard let until = localExamUntil, !isSample else { return }
+        let known = snapshot.exam.map { $0.until >= until.timeIntervalSince1970 * 1000 - 1000 } ?? false
+        if known { return }
+        if Requests.isQueued(type: "exam.start") { return }
+        if let last = lastStartQueued, now.timeIntervalSince(last) < 120 { return }
+        queueExamStart()
     }
 
     /// While exam mode is on an app can be added to the list but not taken off it, or changed from quit to hide.

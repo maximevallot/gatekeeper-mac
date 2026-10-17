@@ -9,34 +9,77 @@
 /* Begin PBXBuildFile section */
 		060E0B6D7A0C7C61C8CDD07A /* Theme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 800DDD4869C0461865FD0860 /* Theme.swift */; };
 		0D210FAF7CFD1883DB09A89A /* AppModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 723E09E9D7FE2E5D497DFBCD /* AppModel.swift */; };
+		1C6A6F212C1D247736D7AB69 /* main.swift in Sources */ = {isa = PBXBuildFile; fileRef = F5C519B06442447AC49CFCD8 /* main.swift */; };
+		1D99503A2F3F17AD716F26D8 /* Requests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BBF83AB380686AB6F1DD87C /* Requests.swift */; };
 		342CC52DD896A494E829AAB7 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1709A5C113CDA3B9CD42A7D /* SettingsView.swift */; };
 		35FDBCE80FDACEA4B906F4FA /* ExamGuard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 09DF7DDB644F1C3E338BCA2F /* ExamGuard.swift */; };
 		453FBAB84B9D057F7539343C /* RingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C3082F88577B0E470AC078BD /* RingView.swift */; };
+		530C55FA838A116D07D7FB39 /* HostInstaller.swift in Sources */ = {isa = PBXBuildFile; fileRef = 015D785442DE072F00E8AD4F /* HostInstaller.swift */; };
 		566C80A1F807EE271927D9F8 /* Browsers.swift in Sources */ = {isa = PBXBuildFile; fileRef = 69682C2E07CCDA217A70EC27 /* Browsers.swift */; };
+		5EF97F72FEB4FAA0EF34A812 /* NativeHost.swift in Sources */ = {isa = PBXBuildFile; fileRef = 35C74CD4B33CD555F9A4ECE5 /* NativeHost.swift */; };
 		62F61B78566305E5E425361D /* Snapshot.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4DF10DD89DCB9DE1EC9DE7EC /* Snapshot.swift */; };
 		7B3768AE3E26E7D93894B198 /* ExamViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = 72B47D6CA449EF6384574998 /* ExamViews.swift */; };
 		A192CE63DDFDEFC710CD08A6 /* GatekeeperApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC2E2DD589B6E209EAAE9F95 /* GatekeeperApp.swift */; };
 		A6CCB5E0C017B734CA9C1FDE /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 1EB5E9079F92D757277F3E04 /* Assets.xcassets */; };
 		B9BFBBE427EAB2999AA02308 /* TodayView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7FCFD727FB07F24DE23DD631 /* TodayView.swift */; };
+		E2B2677BCCE31A34E73C8B5D /* gatekeeper-bridge in Embed Dependencies */ = {isa = PBXBuildFile; fileRef = 9AA7DF378B0737E7FAEA218B /* gatekeeper-bridge */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		FD254DAF6FE3B54F0A96D28E /* NativeHost.swift in Sources */ = {isa = PBXBuildFile; fileRef = 35C74CD4B33CD555F9A4ECE5 /* NativeHost.swift */; };
 /* End PBXBuildFile section */
 
+/* Begin PBXContainerItemProxy section */
+		297B80213ABB6CB352F1E3FE /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 4F1D68DB03C65567D9FFB330 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = CCAC3FD93FE31787334226C3;
+			remoteInfo = "gatekeeper-bridge";
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		9FCB9320366D92642654B912 /* Embed Dependencies */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 6;
+			files = (
+				E2B2677BCCE31A34E73C8B5D /* gatekeeper-bridge in Embed Dependencies */,
+			);
+			name = "Embed Dependencies";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
 /* Begin PBXFileReference section */
+		015D785442DE072F00E8AD4F /* HostInstaller.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HostInstaller.swift; sourceTree = "<group>"; };
 		09DF7DDB644F1C3E338BCA2F /* ExamGuard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExamGuard.swift; sourceTree = "<group>"; };
 		1EB5E9079F92D757277F3E04 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		2BBF83AB380686AB6F1DD87C /* Requests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Requests.swift; sourceTree = "<group>"; };
+		35C74CD4B33CD555F9A4ECE5 /* NativeHost.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NativeHost.swift; sourceTree = "<group>"; };
 		4DF10DD89DCB9DE1EC9DE7EC /* Snapshot.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Snapshot.swift; sourceTree = "<group>"; };
 		69682C2E07CCDA217A70EC27 /* Browsers.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Browsers.swift; sourceTree = "<group>"; };
 		723E09E9D7FE2E5D497DFBCD /* AppModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppModel.swift; sourceTree = "<group>"; };
 		72B47D6CA449EF6384574998 /* ExamViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExamViews.swift; sourceTree = "<group>"; };
 		7FCFD727FB07F24DE23DD631 /* TodayView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TodayView.swift; sourceTree = "<group>"; };
 		800DDD4869C0461865FD0860 /* Theme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Theme.swift; sourceTree = "<group>"; };
+		9AA7DF378B0737E7FAEA218B /* gatekeeper-bridge */ = {isa = PBXFileReference; includeInIndex = 0; path = "gatekeeper-bridge"; sourceTree = BUILT_PRODUCTS_DIR; };
 		C1709A5C113CDA3B9CD42A7D /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
 		C3082F88577B0E470AC078BD /* RingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RingView.swift; sourceTree = "<group>"; };
 		CC2E2DD589B6E209EAAE9F95 /* GatekeeperApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GatekeeperApp.swift; sourceTree = "<group>"; };
 		DC9C71F808FC56FC5C7750B4 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		EA7D64C277B941713DE830EF /* Gatekeeper.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Gatekeeper.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		F5C519B06442447AC49CFCD8 /* main.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = main.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXGroup section */
+		032D0F2C23A550E3AF576874 /* Bridge */ = {
+			isa = PBXGroup;
+			children = (
+				F5C519B06442447AC49CFCD8 /* main.swift */,
+			);
+			path = Bridge;
+			sourceTree = "<group>";
+		};
 		2AE85B2655E96E87891EDC7F /* Exam */ = {
 			isa = PBXGroup;
 			children = (
@@ -49,15 +92,26 @@
 		2D3FB3E7F9E5FF7D5AB2EE3F /* Products */ = {
 			isa = PBXGroup;
 			children = (
+				9AA7DF378B0737E7FAEA218B /* gatekeeper-bridge */,
 				EA7D64C277B941713DE830EF /* Gatekeeper.app */,
 			);
 			name = Products;
 			sourceTree = "<group>";
 		};
+		63E93874DDF1AFE001DB2501 /* Shared */ = {
+			isa = PBXGroup;
+			children = (
+				35C74CD4B33CD555F9A4ECE5 /* NativeHost.swift */,
+			);
+			path = Shared;
+			sourceTree = "<group>";
+		};
 		752E09BDDCF13597A07256F4 = {
 			isa = PBXGroup;
 			children = (
+				032D0F2C23A550E3AF576874 /* Bridge */,
 				D3D9FD17238332CB706834F1 /* Gatekeeper */,
+				63E93874DDF1AFE001DB2501 /* Shared */,
 				2D3FB3E7F9E5FF7D5AB2EE3F /* Products */,
 			);
 			sourceTree = "<group>";
@@ -87,6 +141,8 @@
 			isa = PBXGroup;
 			children = (
 				69682C2E07CCDA217A70EC27 /* Browsers.swift */,
+				015D785442DE072F00E8AD4F /* HostInstaller.swift */,
+				2BBF83AB380686AB6F1DD87C /* Requests.swift */,
 			);
 			path = Mac;
 			sourceTree = "<group>";
@@ -113,10 +169,12 @@
 			buildPhases = (
 				14A653339FD8DF9F66E6C6E7 /* Sources */,
 				15EC51C319C0BDD91B501FB8 /* Resources */,
+				9FCB9320366D92642654B912 /* Embed Dependencies */,
 			);
 			buildRules = (
 			);
 			dependencies = (
+				8E2F3848E5CA8BF86F0DE234 /* PBXTargetDependency */,
 			);
 			name = Gatekeeper;
 			packageProductDependencies = (
@@ -124,6 +182,23 @@
 			productName = Gatekeeper;
 			productReference = EA7D64C277B941713DE830EF /* Gatekeeper.app */;
 			productType = "com.apple.product-type.application";
+		};
+		CCAC3FD93FE31787334226C3 /* gatekeeper-bridge */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = D575D90CE9240BDA7E41A9DC /* Build configuration list for PBXNativeTarget "gatekeeper-bridge" */;
+			buildPhases = (
+				E399959C0708FCE9E8CF6B51 /* Sources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = "gatekeeper-bridge";
+			packageProductDependencies = (
+			);
+			productName = "gatekeeper-bridge";
+			productReference = 9AA7DF378B0737E7FAEA218B /* gatekeeper-bridge */;
+			productType = "com.apple.product-type.tool";
 		};
 /* End PBXNativeTarget section */
 
@@ -135,6 +210,10 @@
 				LastUpgradeCheck = 1430;
 				TargetAttributes = {
 					56A6F2DA85AEEB2AC969FB8B = {
+						DevelopmentTeam = "";
+						ProvisioningStyle = Manual;
+					};
+					CCAC3FD93FE31787334226C3 = {
 						DevelopmentTeam = "";
 						ProvisioningStyle = Manual;
 					};
@@ -155,6 +234,7 @@
 			projectRoot = "";
 			targets = (
 				56A6F2DA85AEEB2AC969FB8B /* Gatekeeper */,
+				CCAC3FD93FE31787334226C3 /* gatekeeper-bridge */,
 			);
 		};
 /* End PBXProject section */
@@ -180,6 +260,9 @@
 				35FDBCE80FDACEA4B906F4FA /* ExamGuard.swift in Sources */,
 				7B3768AE3E26E7D93894B198 /* ExamViews.swift in Sources */,
 				A192CE63DDFDEFC710CD08A6 /* GatekeeperApp.swift in Sources */,
+				530C55FA838A116D07D7FB39 /* HostInstaller.swift in Sources */,
+				FD254DAF6FE3B54F0A96D28E /* NativeHost.swift in Sources */,
+				1D99503A2F3F17AD716F26D8 /* Requests.swift in Sources */,
 				453FBAB84B9D057F7539343C /* RingView.swift in Sources */,
 				342CC52DD896A494E829AAB7 /* SettingsView.swift in Sources */,
 				62F61B78566305E5E425361D /* Snapshot.swift in Sources */,
@@ -188,7 +271,24 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		E399959C0708FCE9E8CF6B51 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				5EF97F72FEB4FAA0EF34A812 /* NativeHost.swift in Sources */,
+				1C6A6F212C1D247736D7AB69 /* main.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		8E2F3848E5CA8BF86F0DE234 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = CCAC3FD93FE31787334226C3 /* gatekeeper-bridge */;
+			targetProxy = 297B80213ABB6CB352F1E3FE /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
 		3F87ED9A7E9B3C984C5AAB2D /* Debug */ = {
@@ -302,6 +402,44 @@
 			};
 			name = Release;
 		};
+		C3D09D68545AF9B8BDD8E47C /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_IDENTITY = "-";
+				CODE_SIGN_STYLE = Manual;
+				COMBINE_HIDPI_IMAGES = YES;
+				DEVELOPMENT_TEAM = "";
+				ENABLE_HARDENED_RUNTIME = NO;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.gatekeeper.mac.bridge;
+				PRODUCT_NAME = "gatekeeper-bridge";
+				SDKROOT = macosx;
+				SKIP_INSTALL = YES;
+			};
+			name = Debug;
+		};
+		C601209DBB783F256E1C2B20 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_IDENTITY = "-";
+				CODE_SIGN_STYLE = Manual;
+				COMBINE_HIDPI_IMAGES = YES;
+				DEVELOPMENT_TEAM = "";
+				ENABLE_HARDENED_RUNTIME = NO;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.gatekeeper.mac.bridge;
+				PRODUCT_NAME = "gatekeeper-bridge";
+				SDKROOT = macosx;
+				SKIP_INSTALL = YES;
+			};
+			name = Release;
+		};
 		F2C27435CC095F5C42CBA80A /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -377,6 +515,15 @@
 			buildConfigurations = (
 				3F87ED9A7E9B3C984C5AAB2D /* Debug */,
 				95736E62C83A8B63ACE890F8 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		D575D90CE9240BDA7E41A9DC /* Build configuration list for PBXNativeTarget "gatekeeper-bridge" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				C3D09D68545AF9B8BDD8E47C /* Debug */,
+				C601209DBB783F256E1C2B20 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Debug;

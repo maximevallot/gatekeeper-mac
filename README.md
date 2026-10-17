@@ -22,11 +22,15 @@ Stop it with the ■ button in Xcode, or from the popup: the "Normal day" chip, 
 
 ## What it shows
 
-- Until the extension talks to the Mac, Today shows the design's sample day and says "sample" next to the
-  title. Real data arrives through `~/Library/Application Support/Gatekeeper/today.json`, which the bridge
-  in [docs/contract.md](docs/contract.md) will write. That contract is a proposal; nothing writes the file yet.
-- "Change something", "All rules" and "Your week" open the extension's rules page in the browser that has
-  the extension (found in Brave's or Chrome's profile). The extension has no week page yet.
+- Real data comes from the extension through Chrome native messaging ([docs/contract.md](docs/contract.md)):
+  the extension sends today to `gatekeeper-bridge`, a small tool inside the app, which saves it to
+  `~/Library/Application Support/Gatekeeper/today.json`. At every launch the app tells Brave and Chrome where
+  the bridge is (a file named `com.gatekeeper.helper.json` in each one's `NativeMessagingHosts` folder).
+  Until the extension sends, Today shows the design's sample day and says "sample" next to the title.
+- "Change something" opens the extension's talk page, "All rules" its rules and "Your week" its week, in the
+  browser that has the extension.
+- Starting exam mode on the Mac, or ending it with the sentence, is passed to the extension the next time it
+  calls the bridge, within a minute.
 
 ## Appearance
 

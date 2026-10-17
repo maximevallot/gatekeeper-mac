@@ -1,8 +1,8 @@
 # Sharing rules with the extension: the proposal and the contract
 
-Status: proposal, 2026-10-17. Not built on either side. The Mac app already reads the file this contract
-writes (`today.json`), so it shows real data the day the bridge and the extension change land; until then it
-shows sample data.
+Status: approved by Maxime on 2026-10-17 ("Yes to the native-messaging contract"). The Mac side (the bridge,
+the host manifests, the requests) is built in this repository; the extension side is built by the Gatekeeper
+session that owns `~/gatekeeper-app`. Until the extension sends, the Mac shows the design's sample day.
 
 ## The idea
 
@@ -27,9 +27,10 @@ extension (Brave or Chrome)                     Mac
    (`kfikbbdocggfgfhaegkgkfomhmacdbjp`, from the path of `~/gatekeeper-app/extension`) and the store ID once
    the store gives one. No other extension and no web page can reach the bridge.
 3. The extension calls `chrome.runtime.sendNativeMessage("com.gatekeeper.helper", msg)` when the snapshot
-   below changes (minutes left move at most once a minute), and at least every 5 minutes as a heartbeat.
-   The bridge's reply carries any requests the Mac queued. A request from the Mac therefore takes effect in
-   the extension within a minute or so; the Mac enforces its own side at once and does not wait.
+   below changes (minutes left move at most once a minute), and at least once a minute as a heartbeat
+   (`chrome.alarms`). Each send starts the bridge for a few milliseconds. The bridge's reply carries any
+   requests the Mac queued, so a request from the Mac takes effect in the extension within a minute; the Mac
+   enforces its own side at once and does not wait.
 4. Files live in `~/Library/Application Support/Gatekeeper/`: the bridge replaces `today.json` atomically;
    the app writes one file per request in `requests/`; the bridge hands each over once and deletes it.
 
@@ -62,7 +63,7 @@ extension (Brave or Chrome)                     Mac
   "at": 1760716800000,
   "browser": "com.brave.Browser",
   "extensionId": "kfikbbdocggfgfhaegkgkfomhmacdbjp",
-  "pages": { "rules": "pages/rules.html", "week": null },
+  "pages": { "rules": "pages/rules.html", "talk": "pages/talk.html", "week": "pages/week.html" },
   "goal": "Finish problem set 4 by Thursday",
   "dayStart": 4,
   "endsAt": 1760774400000,
@@ -80,7 +81,8 @@ extension (Brave or Chrome)                     Mac
 - `kinds` lists only watched kinds, in the order the rules page shows them. `minutes` 0 means closed all day.
   `usedSeconds` is `usage.seconds[kind]`.
 - `pages` are paths inside the extension; the app opens `chrome-extension://<extensionId>/<path>` in
-  `browser`. `week` is null until the extension has a week page; the app then opens the rules page.
+  `browser`: "Change something" opens `talk`, "All rules" `rules`, "Your week" `week`. A missing page falls
+  back to `rules`.
 - `pending` is null or the moment a waiting loosening applies. `exam` is null when exam mode is off.
 - `browser` is the bundle ID of the browser running the extension. The bridge can also find it from its parent
   process, so the extension may leave it out.
@@ -96,9 +98,11 @@ extension (Brave or Chrome)                     Mac
 
 - `exam.start`: a tightening, applied at once. If exam mode is already on, the later `until` wins.
 - `exam.end`: applied only if `sentence` is the end sentence, typed by the user. Anything else is refused.
-- Each request is handed over once. The result shows in the next snapshot; if the Mac does not see it there
-  within two minutes it queues the request again.
-- Errors: `{ "ok": false, "error": "bad_message" | "unknown_version" }`. The extension ignores them and tries
+- Each request is handed over once. The result shows in the next snapshot; if the Mac does not see an
+  `exam.start` there within two minutes of handing it over, it queues it again.
+- After `exam.end`, the Mac stops enforcing at once and ignores a snapshot's `exam` whose `until` is not
+  later than the one it ended, so a snapshot sent before the extension applied the end does not restart it.
+- Errors: `{ "ok": false, "error": "bad_origin" | "bad_message" | "unknown_version" | "write_failed" }`. The extension ignores them and tries
   again at the next change.
 
 ### What stays on the Mac
@@ -108,6 +112,8 @@ only on the Mac. While exam mode is on, the Mac lets an app be added to the list
 
 ### What the Mac does with the snapshot
 
+- The bridge fills `extensionId` from the calling origin and `browser` from its parent process when the
+  extension leaves them out, and answers only the extension IDs listed in the host manifest.
 - A ring per kind: minutes left, or a lock with "till 4:00" when the budget is spent, or "all day" at 0
   minutes. A snapshot older than its `endsAt` shows full budgets (a new day began).
 - Exam mode is on if the snapshot says so or if the Mac started it and the extension has not answered yet; the

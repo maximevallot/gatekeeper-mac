@@ -13,6 +13,7 @@ struct Snapshot: Codable, Equatable {
 
     struct Pages: Codable, Equatable {
         var rules: String?
+        var talk: String?
         var week: String?
     }
 
