@@ -10,6 +10,8 @@ final class AppModel: ObservableObject {
     // Today, from the extension (docs/contract.md), or the design's sample until the bridge exists.
     @Published private(set) var snapshot: Snapshot = .sample()
     @Published private(set) var isSample = true
+    /// The clock the screens show, moved once a minute so the menu bar is not redrawn every two seconds.
+    /// Exam mode reads the real time (Date()), so it starts and ends to the second.
     @Published private(set) var now = Date()
 
     // The browser running the extension, from the snapshot or found in the browsers' preferences.
@@ -36,6 +38,7 @@ final class AppModel: ObservableObject {
 
     private let defaults = UserDefaults.standard
     private let guardian = ExamGuard()
+    private let notice = KeptAwayNotice()
     private var timer: Timer?
     private var snapshotDate: Date?
     private var lastStartQueued: Date?
@@ -60,6 +63,17 @@ final class AppModel: ObservableObject {
             extensionID = found.extensionID
         }
         HostInstaller.install(extraIDs: [extensionID].compactMap { $0 })
+        guardian.onKeptAway = { [weak self] app in
+            guard let self, let until = self.examUntil else { return }
+            self.notice.show(app: app, until: until)
+        }
+        #if DEBUG
+        // Debug builds only: `open Gatekeeper.app --args -showTestNotice` shows one notice, to check it without
+        // making another app come forward.
+        if CommandLine.arguments.contains("-showTestNotice") {
+            notice.show(app: "Mail", until: Date().addingTimeInterval(3600))
+        }
+        #endif
         reloadSnapshot()
         applyGuardSettings()
         update()
@@ -81,9 +95,10 @@ final class AppModel: ObservableObject {
     // MARK: The clock
 
     private func update() {
-        now = Date()
+        let t = Date()
+        if Int(t.timeIntervalSince1970 / 60) != Int(now.timeIntervalSince1970 / 60) { now = t }
         reloadSnapshot()
-        if let until = localExamUntil, until <= now { localExamUntil = nil }
+        if let until = localExamUntil, until <= t { localExamUntil = nil }
         adoptOrResendExamStart()
         guardian.setActive(examOn)
         guardian.sweep()
@@ -147,7 +162,7 @@ final class AppModel: ObservableObject {
     var examUntil: Date? {
         let fromExtension = snapshot.exam.map { Date(timeIntervalSince1970: $0.until / 1000) }
         let latest = [localExamUntil, isSample ? nil : fromExtension].compactMap { $0 }.max()
-        guard let until = latest, until > now else { return nil }
+        guard let until = latest, until > Date() else { return nil }
         return until
     }
 
@@ -156,7 +171,7 @@ final class AppModel: ObservableObject {
     /// Exam mode is the extension's: ending it early happens there, with the sentence typed in the browser.
     var examEndsInExtension: Bool {
         guard !isSample, let exam = snapshot.exam else { return false }
-        return Date(timeIntervalSince1970: exam.until / 1000) > now
+        return Date(timeIntervalSince1970: exam.until / 1000) > Date()
     }
 
     /// Starting or extending exam mode is a tightening: it applies at once.
@@ -198,7 +213,7 @@ final class AppModel: ObservableObject {
             return
         }
         if Requests.isQueued(type: "exam.start") { return }
-        if let last = lastStartQueued, now.timeIntervalSince(last) < 120 { return }
+        if let last = lastStartQueued, Date().timeIntervalSince(last) < 120 { return }
         queueExamStart()
     }
 

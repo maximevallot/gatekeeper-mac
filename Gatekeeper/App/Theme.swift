@@ -29,10 +29,22 @@ enum Theme {
     }
 
     private static func dynamic(light: Int, dark: Int) -> Color {
-        Color(nsColor: NSColor(name: nil) { appearance in
+        Color(nsColor: dynamicNS(light: light, dark: dark))
+    }
+
+    /// The same colors for plain AppKit views (the exam-mode notice).
+    enum AppKit {
+        static let accent = dynamicNS(light: 0x3B5BDB, dark: 0x7D96FF)
+        static let text = dynamicNS(light: 0x161A23, dark: 0xECEFF4)
+        static let surface = dynamicNS(light: 0xFFFFFF, dark: 0x1F232B)
+        static let line = dynamicNS(light: 0xE3E6EE, dark: 0x2E333D)
+    }
+
+    private static func dynamicNS(light: Int, dark: Int) -> NSColor {
+        NSColor(name: nil) { appearance in
             let isDark = appearance.bestMatch(from: [.darkAqua, .aqua]) == .darkAqua
             return rgb(isDark ? dark : light)
-        })
+        }
     }
 
     private static func rgb(_ hex: Int) -> NSColor {

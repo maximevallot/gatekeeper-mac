@@ -5,6 +5,9 @@ options:
     macOS: "14.0"
   createIntermediateGroups: true
 settings:
+  configs:
+    Debug:
+      SWIFT_ACTIVE_COMPILATION_CONDITIONS: DEBUG
   base:
     SWIFT_VERSION: "5.0"
     MARKETING_VERSION: "0.1.0"
@@ -14,6 +17,8 @@ targets:
     type: application
     platform: macOS
     sources: [Gatekeeper, Shared]
+    scheme:
+      testTargets: [GatekeeperTests]
     dependencies:
       # The bridge the extension calls, inside the app at Contents/MacOS/gatekeeper-bridge.
       - target: gatekeeper-bridge
@@ -55,3 +60,20 @@ targets:
         DEVELOPMENT_TEAM: ""
         ENABLE_HARDENED_RUNTIME: NO
         SKIP_INSTALL: YES
+  GatekeeperTests:
+    # Logic only: these files are compiled into the test bundle, so the tests launch no app and touch no other app.
+    type: bundle.unit-test
+    platform: macOS
+    sources:
+      - Tests
+      - Shared
+      - Gatekeeper/Today/Snapshot.swift
+      - Gatekeeper/Exam/ExamGuard.swift
+      - Gatekeeper/Mac/Browsers.swift
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.gatekeeper.mac.tests
+        CODE_SIGN_STYLE: Manual
+        CODE_SIGN_IDENTITY: "-"
+        DEVELOPMENT_TEAM: ""
+        GENERATE_INFOPLIST_FILE: YES
