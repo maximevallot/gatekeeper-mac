@@ -1,0 +1,387 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 77;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		060E0B6D7A0C7C61C8CDD07A /* Theme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 800DDD4869C0461865FD0860 /* Theme.swift */; };
+		0D210FAF7CFD1883DB09A89A /* AppModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 723E09E9D7FE2E5D497DFBCD /* AppModel.swift */; };
+		342CC52DD896A494E829AAB7 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1709A5C113CDA3B9CD42A7D /* SettingsView.swift */; };
+		35FDBCE80FDACEA4B906F4FA /* ExamGuard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 09DF7DDB644F1C3E338BCA2F /* ExamGuard.swift */; };
+		453FBAB84B9D057F7539343C /* RingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C3082F88577B0E470AC078BD /* RingView.swift */; };
+		566C80A1F807EE271927D9F8 /* Browsers.swift in Sources */ = {isa = PBXBuildFile; fileRef = 69682C2E07CCDA217A70EC27 /* Browsers.swift */; };
+		62F61B78566305E5E425361D /* Snapshot.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4DF10DD89DCB9DE1EC9DE7EC /* Snapshot.swift */; };
+		7B3768AE3E26E7D93894B198 /* ExamViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = 72B47D6CA449EF6384574998 /* ExamViews.swift */; };
+		A192CE63DDFDEFC710CD08A6 /* GatekeeperApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC2E2DD589B6E209EAAE9F95 /* GatekeeperApp.swift */; };
+		A6CCB5E0C017B734CA9C1FDE /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 1EB5E9079F92D757277F3E04 /* Assets.xcassets */; };
+		B9BFBBE427EAB2999AA02308 /* TodayView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7FCFD727FB07F24DE23DD631 /* TodayView.swift */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXFileReference section */
+		09DF7DDB644F1C3E338BCA2F /* ExamGuard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExamGuard.swift; sourceTree = "<group>"; };
+		1EB5E9079F92D757277F3E04 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		4DF10DD89DCB9DE1EC9DE7EC /* Snapshot.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Snapshot.swift; sourceTree = "<group>"; };
+		69682C2E07CCDA217A70EC27 /* Browsers.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Browsers.swift; sourceTree = "<group>"; };
+		723E09E9D7FE2E5D497DFBCD /* AppModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppModel.swift; sourceTree = "<group>"; };
+		72B47D6CA449EF6384574998 /* ExamViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExamViews.swift; sourceTree = "<group>"; };
+		7FCFD727FB07F24DE23DD631 /* TodayView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TodayView.swift; sourceTree = "<group>"; };
+		800DDD4869C0461865FD0860 /* Theme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Theme.swift; sourceTree = "<group>"; };
+		C1709A5C113CDA3B9CD42A7D /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
+		C3082F88577B0E470AC078BD /* RingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RingView.swift; sourceTree = "<group>"; };
+		CC2E2DD589B6E209EAAE9F95 /* GatekeeperApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GatekeeperApp.swift; sourceTree = "<group>"; };
+		DC9C71F808FC56FC5C7750B4 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
+		EA7D64C277B941713DE830EF /* Gatekeeper.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Gatekeeper.app; sourceTree = BUILT_PRODUCTS_DIR; };
+/* End PBXFileReference section */
+
+/* Begin PBXGroup section */
+		2AE85B2655E96E87891EDC7F /* Exam */ = {
+			isa = PBXGroup;
+			children = (
+				09DF7DDB644F1C3E338BCA2F /* ExamGuard.swift */,
+				72B47D6CA449EF6384574998 /* ExamViews.swift */,
+			);
+			path = Exam;
+			sourceTree = "<group>";
+		};
+		2D3FB3E7F9E5FF7D5AB2EE3F /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				EA7D64C277B941713DE830EF /* Gatekeeper.app */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		752E09BDDCF13597A07256F4 = {
+			isa = PBXGroup;
+			children = (
+				D3D9FD17238332CB706834F1 /* Gatekeeper */,
+				2D3FB3E7F9E5FF7D5AB2EE3F /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		86190890097C03E06D2CC837 /* App */ = {
+			isa = PBXGroup;
+			children = (
+				723E09E9D7FE2E5D497DFBCD /* AppModel.swift */,
+				CC2E2DD589B6E209EAAE9F95 /* GatekeeperApp.swift */,
+				C1709A5C113CDA3B9CD42A7D /* SettingsView.swift */,
+				800DDD4869C0461865FD0860 /* Theme.swift */,
+			);
+			path = App;
+			sourceTree = "<group>";
+		};
+		9D903EA62B6EADF8D2A30BA5 /* Today */ = {
+			isa = PBXGroup;
+			children = (
+				C3082F88577B0E470AC078BD /* RingView.swift */,
+				4DF10DD89DCB9DE1EC9DE7EC /* Snapshot.swift */,
+				7FCFD727FB07F24DE23DD631 /* TodayView.swift */,
+			);
+			path = Today;
+			sourceTree = "<group>";
+		};
+		C1E8A141D3B854F60E93E2C7 /* Mac */ = {
+			isa = PBXGroup;
+			children = (
+				69682C2E07CCDA217A70EC27 /* Browsers.swift */,
+			);
+			path = Mac;
+			sourceTree = "<group>";
+		};
+		D3D9FD17238332CB706834F1 /* Gatekeeper */ = {
+			isa = PBXGroup;
+			children = (
+				1EB5E9079F92D757277F3E04 /* Assets.xcassets */,
+				DC9C71F808FC56FC5C7750B4 /* Info.plist */,
+				86190890097C03E06D2CC837 /* App */,
+				2AE85B2655E96E87891EDC7F /* Exam */,
+				C1E8A141D3B854F60E93E2C7 /* Mac */,
+				9D903EA62B6EADF8D2A30BA5 /* Today */,
+			);
+			path = Gatekeeper;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		56A6F2DA85AEEB2AC969FB8B /* Gatekeeper */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 8DA00E46960DEDD88B0B2AF3 /* Build configuration list for PBXNativeTarget "Gatekeeper" */;
+			buildPhases = (
+				14A653339FD8DF9F66E6C6E7 /* Sources */,
+				15EC51C319C0BDD91B501FB8 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = Gatekeeper;
+			packageProductDependencies = (
+			);
+			productName = Gatekeeper;
+			productReference = EA7D64C277B941713DE830EF /* Gatekeeper.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		4F1D68DB03C65567D9FFB330 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = YES;
+				LastUpgradeCheck = 1430;
+				TargetAttributes = {
+					56A6F2DA85AEEB2AC969FB8B = {
+						DevelopmentTeam = "";
+						ProvisioningStyle = Manual;
+					};
+				};
+			};
+			buildConfigurationList = 134073A7C8C9202319B0F96B /* Build configuration list for PBXProject "Gatekeeper" */;
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				Base,
+				en,
+			);
+			mainGroup = 752E09BDDCF13597A07256F4;
+			minimizedProjectReferenceProxies = 1;
+			preferredProjectObjectVersion = 77;
+			productRefGroup = 2D3FB3E7F9E5FF7D5AB2EE3F /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				56A6F2DA85AEEB2AC969FB8B /* Gatekeeper */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		15EC51C319C0BDD91B501FB8 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				A6CCB5E0C017B734CA9C1FDE /* Assets.xcassets in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		14A653339FD8DF9F66E6C6E7 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				0D210FAF7CFD1883DB09A89A /* AppModel.swift in Sources */,
+				566C80A1F807EE271927D9F8 /* Browsers.swift in Sources */,
+				35FDBCE80FDACEA4B906F4FA /* ExamGuard.swift in Sources */,
+				7B3768AE3E26E7D93894B198 /* ExamViews.swift in Sources */,
+				A192CE63DDFDEFC710CD08A6 /* GatekeeperApp.swift in Sources */,
+				453FBAB84B9D057F7539343C /* RingView.swift in Sources */,
+				342CC52DD896A494E829AAB7 /* SettingsView.swift in Sources */,
+				62F61B78566305E5E425361D /* Snapshot.swift in Sources */,
+				060E0B6D7A0C7C61C8CDD07A /* Theme.swift in Sources */,
+				B9BFBBE427EAB2999AA02308 /* TodayView.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		3F87ED9A7E9B3C984C5AAB2D /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_IDENTITY = "-";
+				CODE_SIGN_STYLE = Manual;
+				COMBINE_HIDPI_IMAGES = YES;
+				DEVELOPMENT_TEAM = "";
+				ENABLE_APP_SANDBOX = NO;
+				ENABLE_HARDENED_RUNTIME = NO;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = Gatekeeper/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.gatekeeper.mac;
+				PRODUCT_NAME = Gatekeeper;
+				SDKROOT = macosx;
+			};
+			name = Debug;
+		};
+		5CB13D2168764DE331FF9C24 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				CURRENT_PROJECT_VERSION = 1;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"$(inherited)",
+					"DEBUG=1",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				MARKETING_VERSION = 0.1.0;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = macosx;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 5.0;
+			};
+			name = Debug;
+		};
+		95736E62C83A8B63ACE890F8 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_IDENTITY = "-";
+				CODE_SIGN_STYLE = Manual;
+				COMBINE_HIDPI_IMAGES = YES;
+				DEVELOPMENT_TEAM = "";
+				ENABLE_APP_SANDBOX = NO;
+				ENABLE_HARDENED_RUNTIME = NO;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = Gatekeeper/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.gatekeeper.mac;
+				PRODUCT_NAME = Gatekeeper;
+				SDKROOT = macosx;
+			};
+			name = Release;
+		};
+		F2C27435CC095F5C42CBA80A /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				CURRENT_PROJECT_VERSION = 1;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				MARKETING_VERSION = 0.1.0;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = macosx;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				SWIFT_VERSION = 5.0;
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		134073A7C8C9202319B0F96B /* Build configuration list for PBXProject "Gatekeeper" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				5CB13D2168764DE331FF9C24 /* Debug */,
+				F2C27435CC095F5C42CBA80A /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		8DA00E46960DEDD88B0B2AF3 /* Build configuration list for PBXNativeTarget "Gatekeeper" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				3F87ED9A7E9B3C984C5AAB2D /* Debug */,
+				95736E62C83A8B63ACE890F8 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = 4F1D68DB03C65567D9FFB330 /* Project object */;
+}
