@@ -13,6 +13,7 @@ struct SettingsView: View {
                     Text("Gatekeeper on your Mac").font(Theme.font(20, .heavy))
                     Text("Today's time in the menu bar. Exam mode for your apps.")
                         .font(Theme.font(13)).foregroundStyle(Theme.muted)
+                        .fixedSize(horizontal: false, vertical: true)
                 }
             }
 
@@ -63,6 +64,7 @@ struct SettingsView: View {
 
             Text("No macOS permission needed: hiding and quitting apps works without one.")
                 .font(Theme.font(12)).foregroundStyle(Theme.muted)
+                .fixedSize(horizontal: false, vertical: true)
         }
         .padding(24)
         .frame(width: 460)
