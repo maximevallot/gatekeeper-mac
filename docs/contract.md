@@ -2,7 +2,9 @@
 
 Status: approved by Maxime on 2026-10-17 ("Yes to the native-messaging contract"). The Mac side (the bridge,
 the host manifests, the requests) is built in this repository; the extension side is built by the Gatekeeper
-session that owns `~/gatekeeper-app`. Until the extension sends, the Mac shows the design's sample day.
+session that owns `~/gatekeeper-app`; it works end to end since 2026-10-17. Without a connected browser the Mac
+asks to connect and has no rules, no exam mode and no sample day of its own (Maxime's decision of 2026-10-17,
+"Ask to connect", from the one-model review in `~/brain/outputs/html/2026-10-17-gatekeeper-one-model.html`).
 
 ## The idea
 
@@ -50,7 +52,7 @@ extension (Brave or Chrome)                     Mac
   the rules page when the user turns on "Mac app", so installing the extension shows no new warning. Adding
   it is a store resubmission (0.2.x, not 0.1.1). To check before relying on it: that Chrome and Brave both
   accept `nativeMessaging` under `optional_permissions` at the extension's minimum Chrome version (116).
-- The engine has no exam mode yet. The contract below assumes the extension session adds one.
+- Exam mode lives in the engine (`rules.exam`), started through `proposeRules`.
 
 ## The contract, version 1
 
@@ -110,8 +112,9 @@ The engine's `todaySummary(state, now)`, plus who sent it, the pages, and exam m
 - The Mac only ever asks to tighten. `exam.start` starts exam mode, or extends it if the later `until` is this
   one, and applies at once. Any process running as the user could write a request file, so a request that
   loosens anything would be a way around the rules; there is none.
-- Ending exam mode early happens only in the extension, with the sentence typed there. The Mac's "End exam
-  mode early" opens `pages.exam`.
+- Ending exam mode early is a loosening, so it happens only in the extension: the Mac's "End exam mode early"
+  opens the chat (`pages.talk`, with `?from=rules` added when the path has no query, so it opens as a full
+  tab), where the agent decides. The Mac never ends anything, not even with a typed sentence.
 - Each request is handed over once. If the next snapshots do not show an `exam.start` within two minutes of
   handing it over, the Mac queues it again.
 - Errors: `{ "ok": false, "error": "bad_origin" | "bad_message" | "unknown_version" | "write_failed" }`. The
@@ -130,14 +133,16 @@ only on the Mac. While exam mode is on, the Mac lets an app be added to the list
   rings. It never reopens anything on its own clock (QA finding H2).
 - Exam mode is on while the snapshot says so. A Mac-started exam mode is enforced on the Mac at once and
   handed to the extension; once a snapshot shows it, the extension's is the one in force.
-- With no extension connected (no `today.json`), exam mode lives on the Mac alone, and ending it early takes the
-  sentence typed on the Mac.
+- The browser counts as connected while its last message is under two minutes old (it sends one a minute).
+  Without it the Mac shows "Connect Gatekeeper in your browser", with one step and a button that opens the
+  extension's rules page, and offers no exam mode. An exam mode the engine already started keeps running on the
+  Mac until its `until`, even with the browser closed.
+- "Start exam mode" is offered only while connected. It sends `exam.start` with `until` and `goal`, hides apps at
+  once (a tightening), and shows exam mode as on once a snapshot confirms it. A start not confirmed is dropped
+  when the browser stops answering, after ten minutes, or at its end, and its queued request is deleted.
 
-### What the extension still needs (from the review)
+### Done on the extension's side
 
-- An exam mode in the engine, in `state.rules` so `tighten()` covers it, started through `proposeRules`.
-- `nativeMessaging` under `optional_permissions`, checked against Brave 155 and Chrome 116, with a listing
-  justification and a claims-list row.
-- A line in the 0.2.0 privacy text, the store's data answers and a "Mac app" consent list: `today.json` holds
-  the goal, minutes and exam goal on the Mac, readable by any app running as the user, and goes to no server.
-- Calls to the bridge from `syncBlocking`'s change detection, not from the 2-second tick.
+The items the review listed (exam mode in the engine, the optional `nativeMessaging` permission behind a "Mac
+app" switch, the listing and claims rows, the privacy and consent line for `today.json`, calls from change
+detection) are built on `~/gatekeeper-app` main for 0.2.0.

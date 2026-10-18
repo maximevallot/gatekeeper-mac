@@ -52,22 +52,6 @@ struct Snapshot: Codable, Equatable {
     var reopens: Date { Date(timeIntervalSince1970: reopensAt / 1000) }
 }
 
-extension Snapshot {
-    /// The screen in the design canvas: Social 9 of 15 left, Video spent, Games closed all day.
-    static func sample(now: Date = Date()) -> Snapshot {
-        Snapshot(
-            v: 1, at: now.timeIntervalSince1970 * 1000, browser: nil, extensionId: nil, pages: nil,
-            goal: "Finish problem set 4 by Thursday",
-            reopensAt: Day.nextStart(after: now, hour: 4).timeIntervalSince1970 * 1000, waiting: false,
-            kinds: [
-                Kind(kind: "social", label: "Social media", short: "Social", minutes: 15, left: 9, status: "open", fraction: 0.6, exam: nil),
-                Kind(kind: "video", label: "Video", short: "Video", minutes: 20, left: 0, status: "spent", fraction: 0, exam: nil),
-                Kind(kind: "games", label: "Games", short: "Games", minutes: 0, left: 0, status: "closed", fraction: 0, exam: nil),
-            ],
-            exam: nil, watch: nil)
-    }
-}
-
 /// One ring on the Today screen, exactly as the engine decided it.
 struct Ring: Identifiable, Equatable {
     enum State: Equatable {
@@ -106,5 +90,46 @@ enum Day {
         var d = cal.date(bySettingHour: hour, minute: 0, second: 0, of: now) ?? now
         if d <= now { d = cal.date(byAdding: .day, value: 1, to: d) ?? d }
         return d
+    }
+}
+
+/// What the Mac follows, worked out from the browser's last word alone, so it can be tested without a screen.
+enum Follow {
+    /// How long after the browser's last message it still counts as connected. It calls every minute.
+    static let connectedFor: TimeInterval = 120
+    /// A start the browser has not confirmed after this long is dropped (it refused it, or never got it).
+    static let pendingFor: TimeInterval = 600
+    /// A start the browser took but does not show after this long is asked for again.
+    static let resendAfter: TimeInterval = 120
+
+    static func connected(lastMessage: Date?, now: Date) -> Bool {
+        lastMessage.map { now.timeIntervalSince($0) < connectedFor } ?? false
+    }
+
+    /// Exam mode as the engine last said, even if the browser has since closed: it runs to its end.
+    static func confirmedExam(_ s: Snapshot?, now: Date) -> Date? {
+        guard let exam = s?.exam else { return nil }
+        let until = Date(timeIntervalSince1970: exam.until / 1000)
+        return until > now ? until : nil
+    }
+
+    /// What the Mac enforces: the engine's exam mode, or a start the browser is confirming.
+    static func enforcedExam(_ s: Snapshot?, pendingUntil: Date?, now: Date) -> Date? {
+        if let until = confirmedExam(s, now: now) { return until }
+        if let p = pendingUntil, p > now { return p }
+        return nil
+    }
+
+    enum PendingStep: Equatable { case wait, confirmed, drop, resend }
+
+    /// What to do with a start of exam mode asked for on the Mac. Confirmed once a snapshot shows it (the engine
+    /// holds it now). Dropped when the browser stops answering (the Mac has no exam mode of its own), after ten
+    /// minutes unconfirmed, or at its end. Sent again if the browser took it and two minutes passed with no sign.
+    static func pendingStep(until: Date, asked: Date, queued: Date, stillQueued: Bool,
+                            snapshot: Snapshot?, connected: Bool, now: Date) -> PendingStep {
+        if let exam = snapshot?.exam, exam.until >= until.timeIntervalSince1970 * 1000 - 1000 { return .confirmed }
+        if !connected || now.timeIntervalSince(asked) > pendingFor || until <= now { return .drop }
+        if !stillQueued && now.timeIntervalSince(queued) > resendAfter { return .resend }
+        return .wait
     }
 }

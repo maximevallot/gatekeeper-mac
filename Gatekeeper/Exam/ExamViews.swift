@@ -4,6 +4,7 @@ struct StartExamView: View {
     @EnvironmentObject var model: AppModel
     @Binding var screen: PopupView.Screen
     @State private var until = Self.roundedUp(Date().addingTimeInterval(3 * 3600))
+    @State private var goal = ""
 
     var body: some View {
         VStack(alignment: .leading, spacing: 18) {
@@ -22,6 +23,12 @@ struct StartExamView: View {
             }
 
             VStack(alignment: .leading, spacing: 8) {
+                Text("For").font(Theme.font(13, .semibold)).foregroundStyle(Theme.muted)
+                TextField("Midterm on Wednesday", text: $goal)
+                    .textFieldStyle(.roundedBorder)
+            }
+
+            VStack(alignment: .leading, spacing: 8) {
                 Text("Kept away").font(Theme.font(13, .semibold)).foregroundStyle(Theme.muted)
                 Text(keptAway).font(Theme.font(14)).fixedSize(horizontal: false, vertical: true)
             }
@@ -30,10 +37,10 @@ struct StartExamView: View {
             .background(Theme.card, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
 
             PrimaryButton(title: "Start", systemImage: "lock.fill", color: Theme.accentFill) {
-                model.startExam(until: until)
+                model.startExam(until: until, goal: goal)
                 screen = .today
             }
-            .disabled(until <= Date())
+            .disabled(until <= Date() || !model.connected)
         }
     }
 
@@ -57,42 +64,6 @@ struct StartExamView: View {
     static func roundedUp(_ date: Date) -> Date {
         let step: TimeInterval = 15 * 60
         return Date(timeIntervalSince1970: (date.timeIntervalSince1970 / step).rounded(.up) * step)
-    }
-}
-
-struct EndExamView: View {
-    @EnvironmentObject var model: AppModel
-    @Binding var screen: PopupView.Screen
-    @State private var typed = ""
-    @State private var wrong = false
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 16) {
-            Header(title: "End early?") { screen = .today }
-
-            if let until = model.examUntil {
-                Text("It ends by itself at \(until.formatted(date: .omitted, time: .shortened)).")
-                    .font(Theme.font(14)).foregroundStyle(Theme.muted)
-            }
-
-            VStack(alignment: .leading, spacing: 8) {
-                Text("Type this to end it now").font(Theme.font(13, .semibold)).foregroundStyle(Theme.muted)
-                Text(AppModel.endSentence).font(Theme.font(14, .medium)).textSelection(.disabled)
-                TextField("", text: $typed)
-                    .textFieldStyle(.roundedBorder)
-                    .onSubmit(end)
-                    .onChange(of: typed) { _, _ in wrong = false }
-                if wrong {
-                    Text("Not the same sentence.").font(Theme.font(12, .semibold)).foregroundStyle(Theme.closed)
-                }
-            }
-
-            PrimaryButton(title: "End exam mode", systemImage: "lock.open", color: Theme.closed, action: end)
-        }
-    }
-
-    private func end() {
-        if model.endExam(sentence: typed) { screen = .today } else { wrong = true }
     }
 }
 

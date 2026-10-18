@@ -37,8 +37,9 @@ final class SnapshotTests: XCTestCase {
 
     func testStatusWinsOverMinutes() {
         // A pass or a video bucket can leave minutes that disagree with the status; the status is what counts.
-        var s = Snapshot.sample()
-        s.kinds = [.init(kind: "video", label: "Video", short: nil, minutes: 20, left: 12, status: "spent", fraction: 0.6, exam: nil)]
+        let s = Snapshot(v: 1, at: 0, browser: nil, extensionId: nil, pages: nil, goal: nil, reopensAt: 1760774400000,
+                         waiting: nil, kinds: [.init(kind: "video", label: "Video", short: nil, minutes: 20, left: 12,
+                                                     status: "spent", fraction: 0.6, exam: nil)], exam: nil, watch: nil)
         XCTAssertEqual(Ring.rings(from: s).first?.state, .spent(reopens: s.reopens))
         XCTAssertEqual(Ring.rings(from: s).first?.name, "Video")
     }
@@ -93,5 +94,48 @@ final class ExamGuardTests: XCTestCase {
         XCTAssertNil(g.action(for: "com.google.Chrome"))
         XCTAssertEqual(g.action(for: "com.apple.Safari"), .hide)
         XCTAssertEqual(g.action(for: "org.mozilla.firefox"), .hide)
+    }
+}
+
+/// The Mac follows the browser and has no exam mode of its own (Maxime's decision of 2026-10-17).
+final class FollowTests: XCTestCase {
+    let now = Date(timeIntervalSince1970: 1_792_250_000)
+
+    func snapshot(examUntil: Date?) -> Snapshot {
+        Snapshot(v: 1, at: 0, browser: nil, extensionId: nil, pages: nil, goal: nil, reopensAt: 1_792_310_400_000,
+                 waiting: nil, kinds: [], exam: examUntil.map { .init(until: $0.timeIntervalSince1970 * 1000, goal: nil) },
+                 watch: nil)
+    }
+
+    func testConnectedMeansAnsweredInTheLastTwoMinutes() {
+        XCTAssertTrue(Follow.connected(lastMessage: now.addingTimeInterval(-60), now: now))
+        XCTAssertFalse(Follow.connected(lastMessage: now.addingTimeInterval(-121), now: now))
+        XCTAssertFalse(Follow.connected(lastMessage: nil, now: now))
+    }
+
+    func testTheBrowsersExamModeRunsToItsEndEvenWithTheBrowserClosed() {
+        let end = now.addingTimeInterval(3600)
+        XCTAssertEqual(Follow.enforcedExam(snapshot(examUntil: end), pendingUntil: nil, now: now), end)
+        XCTAssertNil(Follow.enforcedExam(snapshot(examUntil: end), pendingUntil: nil, now: end.addingTimeInterval(1)))
+    }
+
+    func testNoBrowserNoExamMode() {
+        XCTAssertNil(Follow.enforcedExam(nil, pendingUntil: nil, now: now))
+        XCTAssertNil(Follow.enforcedExam(snapshot(examUntil: nil), pendingUntil: nil, now: now))
+    }
+
+    func testAStartAskedOnTheMacIsEnforcedUntilTheBrowserDecides() {
+        let end = now.addingTimeInterval(3600)
+        XCTAssertEqual(Follow.enforcedExam(nil, pendingUntil: end, now: now), end)
+        let step = { (snap: Snapshot?, connected: Bool, asked: TimeInterval, queued: TimeInterval, stillQueued: Bool) in
+            Follow.pendingStep(until: end, asked: self.now.addingTimeInterval(-asked), queued: self.now.addingTimeInterval(-queued),
+                               stillQueued: stillQueued, snapshot: snap, connected: connected, now: self.now)
+        }
+        XCTAssertEqual(step(snapshot(examUntil: end), true, 30, 30, false), .confirmed)
+        XCTAssertEqual(step(snapshot(examUntil: nil), true, 30, 30, true), .wait)
+        XCTAssertEqual(step(snapshot(examUntil: nil), false, 30, 30, true), .drop, "no browser: no exam mode of the Mac's own")
+        XCTAssertEqual(step(snapshot(examUntil: nil), true, 601, 30, true), .drop, "the engine refused it")
+        XCTAssertEqual(step(snapshot(examUntil: nil), true, 150, 150, false), .resend)
+        XCTAssertEqual(step(snapshot(examUntil: nil), true, 150, 150, true), .wait, "not taken yet: still waiting in the queue")
     }
 }

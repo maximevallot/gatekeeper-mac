@@ -1,18 +1,20 @@
 import SwiftUI
 
-/// The menu-bar popup. Today is the main screen; starting and ending exam mode replace it in place.
+/// The menu-bar popup. With the browser connected it is Today; without, it asks to connect. Starting exam mode
+/// replaces it in place.
 struct PopupView: View {
     @EnvironmentObject var model: AppModel
     @State private var screen: Screen = .today
 
-    enum Screen { case today, startExam, endExam }
+    enum Screen { case today, startExam }
 
     var body: some View {
         Group {
             switch screen {
-            case .today: TodayView(screen: $screen)
-            case .startExam: StartExamView(screen: $screen)
-            case .endExam: EndExamView(screen: $screen)
+            case .today:
+                if model.connected { TodayView(screen: $screen) } else { ConnectView(screen: $screen) }
+            case .startExam:
+                StartExamView(screen: $screen)
             }
         }
         .padding(.horizontal, 18)
@@ -24,9 +26,56 @@ struct PopupView: View {
     }
 }
 
+/// No browser has answered in the last two minutes. The Mac has no rules and no sample day of its own, so it
+/// says how to connect, in one step. An exam mode the browser started still runs here until its end.
+struct ConnectView: View {
+    @EnvironmentObject var model: AppModel
+    @Binding var screen: PopupView.Screen
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 18) {
+            HStack(alignment: .center) {
+                Text("Gatekeeper").font(Theme.font(22, .heavy))
+                Spacer()
+                ModeMenu(screen: $screen)
+            }
+
+            Text("Connect Gatekeeper in your browser to see today and start exam mode here.")
+                .font(Theme.font(15, .medium))
+                .fixedSize(horizontal: false, vertical: true)
+
+            if model.canOpenExtension {
+                Text("In \(model.browserName), open Gatekeeper's Settings and turn on Mac app.")
+                    .font(Theme.font(13)).foregroundStyle(Theme.muted)
+                    .fixedSize(horizontal: false, vertical: true)
+            } else {
+                Text("Add the Gatekeeper extension to Brave or Chrome first.")
+                    .font(Theme.font(13)).foregroundStyle(Theme.muted)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+
+            if let until = model.examUntil {
+                HStack(spacing: 12) {
+                    Image(systemName: "lock.fill").font(.system(size: 15, weight: .semibold)).foregroundStyle(Theme.accent)
+                    Text("Exam mode runs till \(until.formatted(date: .omitted, time: .shortened)). Apps stay hidden.")
+                        .font(Theme.font(14, .medium)).fixedSize(horizontal: false, vertical: true)
+                    Spacer(minLength: 0)
+                }
+                .padding(.horizontal, 14)
+                .padding(.vertical, 13)
+                .background(Theme.card, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+            }
+
+            if model.canOpenExtension {
+                PrimaryButton(title: "Open \(model.browserName)", systemImage: "arrow.up.forward.app",
+                              color: Theme.accentFill, action: model.openRules)
+            }
+        }
+    }
+}
+
 struct TodayView: View {
     @EnvironmentObject var model: AppModel
-    @Environment(\.openWindow) private var openWindow
     @Binding var screen: PopupView.Screen
 
     private let columns = Array(repeating: GridItem(.flexible(), spacing: 6), count: 3)
@@ -35,14 +84,8 @@ struct TodayView: View {
         VStack(alignment: .leading, spacing: 20) {
             HStack(alignment: .center) {
                 Text("Today").font(Theme.font(22, .heavy))
-                if model.isSample {
-                    Text("sample")
-                        .font(Theme.font(11, .medium))
-                        .foregroundStyle(Theme.muted)
-                        .help("No word from the extension yet. This is the design's sample day.")
-                }
                 Spacer()
-                modeMenu
+                ModeMenu(screen: $screen)
             }
 
             if model.isStale {
@@ -50,7 +93,7 @@ struct TodayView: View {
                     .font(Theme.font(14)).foregroundStyle(Theme.muted)
                     .frame(maxWidth: .infinity, minHeight: 80)
                     .help("A new day began. The browser sends today's minutes when it is next open.")
-            } else if model.rings.isEmpty, let watch = model.snapshot.watch {
+            } else if model.rings.isEmpty, let watch = model.snapshot?.watch {
                 Text(watch.day.map { d in "Watch week · day \(d) of \(watch.of ?? 7)" } ?? "Watch week")
                     .font(Theme.font(14)).foregroundStyle(Theme.muted)
                     .frame(maxWidth: .infinity, minHeight: 80)
@@ -105,14 +148,20 @@ struct TodayView: View {
             .foregroundStyle(Theme.link)
             .disabled(!model.canOpenExtension)
     }
+}
 
-    private var modeMenu: some View {
+/// The chip at the top right: what mode the engine says, and the menu behind it.
+struct ModeMenu: View {
+    @EnvironmentObject var model: AppModel
+    @Environment(\.openWindow) private var openWindow
+    @Binding var screen: PopupView.Screen
+
+    var body: some View {
         Menu {
             if model.examOn {
-                Button("End exam mode early…") {
-                    if model.examEndsInExtension { model.openExamPage() } else { screen = .endExam }
-                }
-            } else {
+                Button("End exam mode early…", action: model.endExamEarly)
+                    .disabled(!model.canOpenExtension)
+            } else if model.connected {
                 Button("Start exam mode…") { screen = .startExam }
             }
             Divider()
@@ -123,33 +172,50 @@ struct TodayView: View {
             Button("Quit Gatekeeper") { NSApp.terminate(nil) }
                 .disabled(model.examOn)
         } label: {
-            ModeChip(examUntil: model.examUntil)
+            ModeChip(state: state)
         }
         .menuStyle(.button)
         .buttonStyle(.plain)
         .menuIndicator(.hidden)
         .fixedSize()
     }
+
+    private var state: ModeChip.State {
+        if let until = model.confirmedExamUntil { return .exam(until) }
+        if model.pendingStart != nil, model.examOn { return .starting }
+        return model.connected ? .normal : .offline
+    }
 }
 
 struct ModeChip: View {
-    let examUntil: Date?
+    enum State: Equatable { case normal, offline, starting, exam(Date) }
+    let state: State
 
     var body: some View {
         HStack(spacing: 5) {
-            if let until = examUntil {
+            switch state {
+            case let .exam(until):
                 Image(systemName: "lock.fill").font(.system(size: 10, weight: .bold))
                 Text("Exam till \(until.formatted(date: .omitted, time: .shortened))")
-            } else {
+            case .starting:
+                Image(systemName: "lock.fill").font(.system(size: 10, weight: .bold))
+                Text("Starting exam…")
+            case .normal:
                 Text("Normal day")
+            case .offline:
+                Text("Not connected")
             }
             Image(systemName: "chevron.down").font(.system(size: 9, weight: .bold)).opacity(0.7)
         }
         .font(Theme.font(12, .semibold))
         .padding(.horizontal, 11)
         .padding(.vertical, 6)
-        .foregroundStyle(examUntil == nil ? Theme.accentText : Theme.onAccent)
-        .background(examUntil == nil ? Theme.accentSoft : Theme.accentFill, in: Capsule())
+        .foregroundStyle(foreground)
+        .background(background, in: Capsule())
         .contentShape(Capsule())
     }
+
+    private var isExam: Bool { if case .exam = state { return true }; return state == .starting }
+    private var foreground: Color { isExam ? Theme.onAccent : state == .offline ? Theme.muted : Theme.accentText }
+    private var background: Color { isExam ? Theme.accentFill : state == .offline ? Theme.card : Theme.accentSoft }
 }

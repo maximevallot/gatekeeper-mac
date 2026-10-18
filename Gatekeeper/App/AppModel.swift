@@ -1,15 +1,20 @@
 import AppKit
 import Combine
 import ServiceManagement
+import os
 
 /// Everything the menu-bar popup and the settings window show, and the one place that changes it.
+///
+/// The Mac app has no rules and no exam mode of its own (docs/contract.md; Maxime's decision of 2026-10-17,
+/// "Ask to connect"). It shows what the browser's engine decided and enforces exam mode on the Mac while the
+/// engine says it is on. With no browser connected it asks to connect; an exam mode the browser started keeps
+/// running here until its end, because that is the engine's decision, not the Mac's.
 @MainActor
 final class AppModel: ObservableObject {
-    static let endSentence = "I am choosing to stop preparing for my exam"
-
-    // Today, from the extension (docs/contract.md), or the design's sample until the bridge exists.
-    @Published private(set) var snapshot: Snapshot = .sample()
-    @Published private(set) var isSample = true
+    /// The last snapshot the browser sent (contract version 1); nil until it has sent one.
+    @Published private(set) var snapshot: Snapshot?
+    /// The browser answered in the last two minutes.
+    @Published private(set) var connected = false
     /// The clock the screens show, moved once a minute so the menu bar is not redrawn every two seconds.
     /// Exam mode reads the real time (Date()), so it starts and ends to the second.
     @Published private(set) var now = Date()
@@ -18,9 +23,15 @@ final class AppModel: ObservableObject {
     @Published private(set) var extensionBrowser: String?
     @Published private(set) var extensionID: String?
 
-    // Exam mode started on this Mac. The extension's exam mode, once it has one, comes in the snapshot.
-    @Published private(set) var localExamUntil: Date? {
-        didSet { defaults.set(localExamUntil?.timeIntervalSince1970, forKey: Keys.examUntil) }
+    /// A start of exam mode asked for on the Mac and not yet confirmed by the browser. The Mac hides apps at
+    /// once, since a tightening is harmless; the popup shows it as on once a snapshot confirms it.
+    @Published private(set) var pendingStart: PendingStart?
+
+    struct PendingStart: Equatable {
+        var until: Date
+        var goal: String
+        var asked: Date
+        var queued: Date
     }
 
     @Published var examApps: [ExamApp] { didSet { save(examApps, Keys.examApps); applyGuardSettings() } }
@@ -41,14 +52,14 @@ final class AppModel: ObservableObject {
     private let notice = KeptAwayNotice()
     private var timer: Timer?
     private var snapshotDate: Date?
-    private var lastStartQueued: Date?
+    private let log = Logger(subsystem: "com.gatekeeper.mac", category: "follow")
 
     private enum Keys {
-        static let examUntil = "examUntil"
         static let examApps = "examApps"
         static let browserAction = "browserAction"
         static let firstRunDone = "firstRunDone"
         static let appearance = "appearance"
+        static let oldExamUntil = "examUntil" // the Mac's own exam mode, before 2026-10-17; removed at launch
     }
 
     init() {
@@ -56,7 +67,7 @@ final class AppModel: ObservableObject {
         browserAction = ExamAction(rawValue: defaults.string(forKey: Keys.browserAction) ?? "") ?? .hide
         appearance = Appearance(rawValue: defaults.string(forKey: Keys.appearance) ?? "") ?? .light
         appearance.apply()
-        if let t = defaults.object(forKey: Keys.examUntil) as? Double { localExamUntil = Date(timeIntervalSince1970: t) }
+        defaults.removeObject(forKey: Keys.oldExamUntil)
 
         if let found = Browsers.findExtension() {
             extensionBrowser = found.bundleID
@@ -74,7 +85,6 @@ final class AppModel: ObservableObject {
             notice.show(app: "Mail", until: Date().addingTimeInterval(3600))
         }
         #endif
-        reloadSnapshot()
         applyGuardSettings()
         update()
         timer = Timer.scheduledTimer(withTimeInterval: 2, repeats: true) { [weak self] _ in
@@ -98,8 +108,15 @@ final class AppModel: ObservableObject {
         let t = Date()
         if Int(t.timeIntervalSince1970 / 60) != Int(now.timeIntervalSince1970 / 60) { now = t }
         reloadSnapshot()
-        if let until = localExamUntil, until <= t { localExamUntil = nil }
-        adoptOrResendExamStart()
+        let isConnected = Follow.connected(lastMessage: snapshotDate, now: t)
+        if isConnected != connected {
+            connected = isConnected
+            log.notice("browser \(isConnected ? "connected" : "not connected", privacy: .public)")
+        }
+        followPendingStart(t)
+        if examOn != guardian.active {
+            log.notice("exam mode \(self.examOn ? "on till \(self.examUntil!.formatted())" : "off", privacy: .public)")
+        }
         guardian.setActive(examOn)
         guardian.sweep()
     }
@@ -107,16 +124,12 @@ final class AppModel: ObservableObject {
     private func reloadSnapshot() {
         let url = NativeHost.todayFile
         guard let modified = (try? FileManager.default.attributesOfItem(atPath: url.path))?[.modificationDate] as? Date
-        else {
-            if !isSample { isSample = true; snapshot = .sample() }
-            return
-        }
+        else { return }
         guard modified != snapshotDate else { return }
         snapshotDate = modified
         guard let data = try? Data(contentsOf: url), let s = try? JSONDecoder().decode(Snapshot.self, from: data),
               s.v == 1 else { return }
         snapshot = s
-        isSample = false
         if let b = s.browser, Browsers.known[b] != nil { extensionBrowser = b }
         if let id = s.extensionId { extensionID = id }
         applyGuardSettings()
@@ -133,23 +146,38 @@ final class AppModel: ObservableObject {
 
     /// The day the snapshot describes has ended and the browser has not sent the new one. The Mac does not
     /// reopen anything on its own clock (contract; QA finding H2).
-    var isStale: Bool { !isSample && now >= snapshot.reopens }
+    var isStale: Bool { snapshot.map { now >= $0.reopens } ?? false }
 
-    var rings: [Ring] { isStale ? [] : Ring.rings(from: snapshot) }
+    var rings: [Ring] { guard let s = snapshot, !isStale else { return [] }; return Ring.rings(from: s) }
 
     var goal: String? {
-        let g = (examOn ? snapshot.exam?.goal : nil) ?? snapshot.goal
+        guard let s = snapshot else { return nil }
+        let g = (confirmedExamUntil != nil ? s.exam?.goal : nil) ?? s.goal
         return g?.isEmpty == false ? g : nil
     }
 
     var canOpenExtension: Bool { extensionBrowser != nil && extensionID != nil }
 
+    var browserName: String {
+        switch extensionBrowser {
+        case "com.brave.Browser": return "Brave"
+        case "com.google.Chrome": return "Chrome"
+        case let b?: return Browsers.name(b)
+        case nil: return "your browser"
+        }
+    }
+
     // The pages the extension names in its snapshot; without one, the rules page, which every version has.
-    private var rulesPage: String { snapshot.pages?.rules ?? "pages/rules.html" }
-    func openTalk() { openPage(snapshot.pages?.talk ?? rulesPage) }
+    private var rulesPage: String { snapshot?.pages?.rules ?? "pages/rules.html" }
+
+    /// The one chat. In a full tab it needs ?from=rules, or it takes the toolbar popup's narrow layout.
+    func openTalk() {
+        let page = snapshot?.pages?.talk ?? "pages/talk.html"
+        openPage(page.contains("?") ? page : page + "?from=rules")
+    }
+
     func openRules() { openPage(rulesPage) }
-    func openWeek() { openPage(snapshot.pages?.week ?? rulesPage) }
-    func openExamPage() { openPage(snapshot.pages?.exam ?? rulesPage) }
+    func openWeek() { openPage(snapshot?.pages?.week ?? rulesPage) }
 
     private func openPage(_ page: String) {
         guard let browser = extensionBrowser, let id = extensionID else { return }
@@ -158,63 +186,55 @@ final class AppModel: ObservableObject {
 
     // MARK: Exam mode
 
-    /// The later of the Mac's exam mode and the extension's: whichever ends last is in force.
-    var examUntil: Date? {
-        let fromExtension = snapshot.exam.map { Date(timeIntervalSince1970: $0.until / 1000) }
-        let latest = [localExamUntil, isSample ? nil : fromExtension].compactMap { $0 }.max()
-        guard let until = latest, until > Date() else { return nil }
-        return until
-    }
+    /// Exam mode as the browser's engine last said, even if the browser has since closed: it runs to its end.
+    var confirmedExamUntil: Date? { Follow.confirmedExam(snapshot, now: Date()) }
+
+    /// What the Mac enforces: the engine's exam mode, or a start the browser is confirming.
+    var examUntil: Date? { Follow.enforcedExam(snapshot, pendingUntil: pendingStart?.until, now: Date()) }
 
     var examOn: Bool { examUntil != nil }
 
-    /// Exam mode is the extension's: ending it early happens there, with the sentence typed in the browser.
-    var examEndsInExtension: Bool {
-        guard !isSample, let exam = snapshot.exam else { return false }
-        return Date(timeIntervalSince1970: exam.until / 1000) > Date()
-    }
-
-    /// Starting or extending exam mode is a tightening: it applies at once.
-    func startExam(until: Date) {
-        guard until > Date() else { return }
-        localExamUntil = max(until, localExamUntil ?? until)
+    /// Starting or extending exam mode is a tightening: a request to the browser's engine, enforced here at once.
+    /// Only while the browser is connected; without it the Mac has no exam mode of its own.
+    func startExam(until: Date, goal: String) {
+        guard connected, until > Date() else { return }
+        let t = Date()
+        pendingStart = PendingStart(until: until, goal: goal.trimmingCharacters(in: .whitespacesAndNewlines),
+                                    asked: t, queued: t)
         queueExamStart()
         update()
     }
 
-    /// Ends the Mac's own exam mode early, which takes the sentence, typed. Returns false if it does not match.
-    /// The Mac never asks the extension to end its exam mode: any process could write that request, so
-    /// requests only tighten (contract). An exam mode the extension holds ends in the extension.
-    func endExam(sentence: String) -> Bool {
-        let typed = sentence.trimmingCharacters(in: .whitespacesAndNewlines).trimmingCharacters(in: CharacterSet(charactersIn: "."))
-        guard typed.caseInsensitiveCompare(Self.endSentence) == .orderedSame, !examEndsInExtension else { return false }
-        localExamUntil = nil
-        Requests.removeAll(ofType: "exam.start")
-        update()
-        return true
-    }
+    /// Ending early is a loosening, so it is never done on the Mac: this opens the browser's chat, where the
+    /// agent decides (Maxime's decision of 2026-10-17).
+    func endExamEarly() { openTalk() }
 
     // MARK: Requests to the extension (docs/contract.md)
 
     private func queueExamStart() {
-        guard let until = localExamUntil else { return }
+        guard let p = pendingStart else { return }
         Requests.removeAll(ofType: "exam.start")
-        Requests.queue(["type": "exam.start", "until": (until.timeIntervalSince1970 * 1000).rounded()])
-        lastStartQueued = Date()
+        var request: [String: Any] = ["type": "exam.start", "until": (p.until.timeIntervalSince1970 * 1000).rounded()]
+        if !p.goal.isEmpty { request["goal"] = p.goal }
+        Requests.queue(request)
     }
 
-    /// Once a snapshot shows the Mac's exam mode, the extension holds it and the Mac's copy is dropped. If none
-    /// has two minutes after the request was handed over (the extension called the bridge and the request file
-    /// is gone), it is queued again.
-    private func adoptOrResendExamStart() {
-        guard let until = localExamUntil, !isSample else { return }
-        if let exam = snapshot.exam, exam.until >= until.timeIntervalSince1970 * 1000 - 1000 {
-            localExamUntil = nil
-            return
+    private func followPendingStart(_ t: Date) {
+        guard let p = pendingStart else { return }
+        switch Follow.pendingStep(until: p.until, asked: p.asked, queued: p.queued,
+                                  stillQueued: Requests.isQueued(type: "exam.start"),
+                                  snapshot: snapshot, connected: connected, now: t) {
+        case .confirmed:
+            pendingStart = nil
+        case .drop:
+            pendingStart = nil
+            Requests.removeAll(ofType: "exam.start")
+        case .resend:
+            pendingStart?.queued = t
+            queueExamStart()
+        case .wait:
+            break
         }
-        if Requests.isQueued(type: "exam.start") { return }
-        if let last = lastStartQueued, Date().timeIntervalSince(last) < 120 { return }
-        queueExamStart()
     }
 
     /// While exam mode is on an app can be added to the list but not taken off it, or changed from quit to hide.

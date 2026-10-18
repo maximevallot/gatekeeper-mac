@@ -23,19 +23,22 @@ Developer account, not even a free Apple ID.
 Stop it with the ■ button in Xcode. While exam mode is off you can also quit from the popup: click "Normal
 day", then Quit Gatekeeper.
 
-## What you should see with sample data
+## What you should see
 
-Click the arch. The popup says **Today** with a small grey "sample" beside it, because the extension does not
-send anything yet. Under it, three rings: **Social** with 9 minutes left, **Video** locked "till 4:00",
-**Games** locked "all day". Then the goal "Finish problem set 4 by Thursday", a blue **Change something**
-button, and the links **All rules** and **Your week**. The three buttons open the extension's pages in Brave.
+**Before the browser is connected**, the popup says **Gatekeeper** with a grey "Not connected" chip, and one
+step: in Brave, open Gatekeeper's Settings and turn on Mac app. The **Open Brave** button opens that page. The
+Mac app has no rules or sample day of its own; it only shows what the browser decided.
 
-To try exam mode: click **Normal day**, then **Start exam mode…**, pick an end a few minutes away (the field
-takes typing, or use **2 h**), and press **Start**. The chip turns blue, "Exam till …", and the menu-bar arch
-gets a dot. Mail, Outlook, Slack, WhatsApp, Messages, Discord and every browser except Brave hide at once. Click
-Mail in the Dock: it hides again and a small notice at the top of the screen says "Mail waits till …". When
-the time comes, the apps it hid come back on their own. To end early, click the chip, then **End exam mode
-early…**, and type the sentence shown.
+**Once connected**, the popup says **Today**, with a ring per kind you watch (minutes left, or a red lock "till
+4:00" or "all day"), your goal, a blue **Change something** button that opens the extension's chat, and the links
+**All rules** and **Your week**.
+
+To try exam mode: click **Normal day**, then **Start exam mode…**, pick an end a few minutes away (or **2 h**),
+say what it is for, and press **Start**. The chip says "Starting exam…" until the browser confirms, then "Exam
+till …". Mail, Outlook, Slack, WhatsApp, Messages, Discord and every browser except Brave hide at once; click Mail
+in the Dock and it hides again with a notice "Mail waits till …". At the end the apps come back. **End exam
+mode early…** opens the extension's chat, where you give your reason and the agent decides; the Mac never ends
+it.
 
 ## Connect it to the extension
 
@@ -45,24 +48,21 @@ The extension on `~/gatekeeper-app` main (from `94e02f5`) can send today to the 
 2. In Brave, go to `brave://extensions` and click the round reload arrow on Gatekeeper.
 3. Open Gatekeeper's rules page, go to Settings, turn on **Mac app**, and accept Brave's prompt
    ("Communicate with cooperating native applications").
-4. Within a minute the popup loses "sample" and shows your real rings and goal.
+4. Within a minute the popup changes from "Connect Gatekeeper…" to Today, with your real rings and goal.
 
 If the switch says "Reload Gatekeeper once", reload it as in step 2.
 
 ## What it shows
 
-- Real data comes from the extension through Chrome native messaging ([docs/contract.md](docs/contract.md)):
+- Everything comes from the extension through Chrome native messaging ([docs/contract.md](docs/contract.md)):
   the extension sends today to `gatekeeper-bridge`, a small tool inside the app, which saves it to
   `~/Library/Application Support/Gatekeeper/today.json`. At every launch the app tells Brave and Chrome where
   the bridge is (a file named `com.gatekeeper.helper.json` in each one's `NativeMessagingHosts` folder).
-  Until the extension sends, Today shows the design's sample day and says "sample" next to the title.
-- "Change something" opens the extension's talk page, "All rules" its rules and "Your week" its week, in the
-  browser that has the extension.
+- The browser counts as connected while it has sent something in the last two minutes; it sends every minute.
 - The rings show exactly what the extension decided. When the day turns over and the browser has not sent the
   new day yet, Today says "Waiting for the browser" rather than reopening anything on the Mac's own clock.
-- Starting exam mode on the Mac is passed to the extension the next time it calls the bridge, within a minute.
-  The Mac only ever asks to tighten: ending exam mode early happens in the extension, where the sentence is
-  typed, and "End exam mode early" opens that page.
+- The Mac only ever asks the browser to tighten (start exam mode). Anything looser, ending exam mode early
+  included, happens in the extension.
 
 ## Appearance
 
@@ -74,9 +74,9 @@ design canvas's tokens, the same as the extension's.
 Open the popup, click the "Normal day" chip, then Start exam mode…. Pick an end time and press Start. Until
 then, the apps on the list and the other browsers are hidden (or quit, if set so in Settings) at once, whenever
 they are opened or brought forward, and every two seconds; a notice says which app waits and until when. When
-exam mode ends, the apps it hid come back. Ending early takes typing the sentence, on the Mac while the
-extension is not connected, and in the extension once it holds exam mode. While exam mode is on, Quit is
-greyed out and apps can be added to the list but not taken off.
+exam mode ends, the apps it hid come back. Exam mode starts only with the browser connected, and an exam mode the
+browser started keeps running on the Mac until its end even if the browser closes. Ending early happens in the
+extension's chat. While exam mode is on, Quit is greyed out and apps can be added to the list but not taken off.
 
 Hiding and quitting other apps needs no macOS permission, so there is no permission screen.
 
