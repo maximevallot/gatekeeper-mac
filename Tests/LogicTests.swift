@@ -39,7 +39,7 @@ final class SnapshotTests: XCTestCase {
         // A pass or a video bucket can leave minutes that disagree with the status; the status is what counts.
         let s = Snapshot(v: 1, at: 0, browser: nil, extensionId: nil, pages: nil, goal: nil, reopensAt: 1760774400000,
                          waiting: nil, kinds: [.init(kind: "video", label: "Video", short: nil, minutes: 20, left: 12,
-                                                     status: "spent", fraction: 0.6, exam: nil)], exam: nil, watch: nil)
+                                                     status: "spent", fraction: 0.6, exam: nil, site: nil, examOnly: nil)], sites: nil, exam: nil, watch: nil)
         XCTAssertEqual(Ring.rings(from: s).first?.state, .spent(reopens: s.reopens))
         XCTAssertEqual(Ring.rings(from: s).first?.name, "Video")
     }
@@ -53,6 +53,17 @@ final class SnapshotTests: XCTestCase {
         let examEnd = Date(timeIntervalSince1970: s.exam!.until / 1000)
         // In exam mode every kind is closed until the exam ends, not all day.
         XCTAssertEqual(Ring.rings(from: s).map(\.state), Array(repeating: .spent(reopens: examEnd), count: 3))
+    }
+
+    /// A snapshot from the extension's engine (~/gatekeeper-app 6e38dd0) with two sites that have their own limit:
+    /// lequipe.fr 15 minutes a day, example-news.com closed only in exam mode.
+    func testSitesWithTheirOwnLimitComeAfterTheKinds() throws {
+        let url = Bundle(for: SnapshotTests.self).url(forResource: "extension-snapshot-sites", withExtension: "json")!
+        let s = try JSONDecoder().decode(Snapshot.self, from: Data(contentsOf: url))
+        let rings = Ring.rings(from: s)
+        XCTAssertEqual(rings.map(\.name), ["Social", "Games", "example-news", "lequipe"])
+        XCTAssertEqual(rings[2].state, .examOnly)
+        XCTAssertEqual(rings[3].state, .open(minutesLeft: 15, fraction: 1))
     }
 
     func testNextDayStart() {
@@ -103,7 +114,7 @@ final class FollowTests: XCTestCase {
 
     func snapshot(examUntil: Date?) -> Snapshot {
         Snapshot(v: 1, at: 0, browser: nil, extensionId: nil, pages: nil, goal: nil, reopensAt: 1_792_310_400_000,
-                 waiting: nil, kinds: [], exam: examUntil.map { .init(until: $0.timeIntervalSince1970 * 1000, goal: nil) },
+                 waiting: nil, kinds: [], sites: nil, exam: examUntil.map { .init(until: $0.timeIntervalSince1970 * 1000, goal: nil) },
                  watch: nil)
     }
 

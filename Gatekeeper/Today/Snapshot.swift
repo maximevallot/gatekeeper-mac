@@ -8,12 +8,16 @@ struct Snapshot: Codable, Equatable {
         var kind: String
         var label: String
         var short: String?
-        var minutes: Int
-        var left: Int
+        /// nil only for a site closed in exam mode alone ("examOnly"), open every other day.
+        var minutes: Int?
+        var left: Int?
         var status: String // "open", "spent" or "closed"
         var fraction: Double?
         /// Closed by exam mode rather than by its own budget.
         var exam: Bool?
+        /// For a row of `sites`: the domain with its own limit.
+        var site: String?
+        var examOnly: Bool?
         var id: String { kind }
     }
 
@@ -49,6 +53,8 @@ struct Snapshot: Codable, Equatable {
     var reopensAt: Double
     var waiting: Bool?
     var kinds: [Kind]
+    /// Sites with a daily limit of their own, after the kinds; same shape, kind "s:<domain>".
+    var sites: [Kind]?
     var exam: Exam?
     var watch: Watch?
 
@@ -59,6 +65,8 @@ struct Snapshot: Codable, Equatable {
 struct Ring: Identifiable, Equatable {
     enum State: Equatable {
         case open(minutesLeft: Int, fraction: Double)
+        /// A site closed only in exam mode: open today, no minutes counted.
+        case examOnly
         case spent(reopens: Date)
         case closedAllDay
     }
@@ -68,7 +76,7 @@ struct Ring: Identifiable, Equatable {
     let state: State
 
     static func rings(from s: Snapshot) -> [Ring] {
-        s.kinds.map { k in
+        (s.kinds + (s.sites ?? [])).map { k in
             let name = k.short ?? k.label
             switch k.status {
             case "closed":
@@ -79,8 +87,11 @@ struct Ring: Identifiable, Equatable {
             case "spent":
                 return Ring(id: k.kind, name: name, state: .spent(reopens: s.reopens))
             default:
-                let fraction = k.fraction ?? (k.minutes > 0 ? Double(k.left) / Double(k.minutes) : 0)
-                return Ring(id: k.kind, name: name, state: .open(minutesLeft: k.left, fraction: min(1, max(0, fraction))))
+                guard let minutes = k.minutes, let left = k.left else {
+                    return Ring(id: k.kind, name: name, state: .examOnly)
+                }
+                let fraction = k.fraction ?? (minutes > 0 ? Double(left) / Double(minutes) : 0)
+                return Ring(id: k.kind, name: name, state: .open(minutesLeft: left, fraction: min(1, max(0, fraction))))
             }
         }
     }

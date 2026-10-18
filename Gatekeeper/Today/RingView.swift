@@ -19,6 +19,11 @@ struct RingView: View {
                         .font(Theme.font(21, .heavy))
                         .foregroundStyle(Theme.text)
                         .monospacedDigit()
+                case .examOnly:
+                    Circle().stroke(Theme.track, lineWidth: 9)
+                    Image(systemName: "graduationcap")
+                        .font(.system(size: 20, weight: .medium))
+                        .foregroundStyle(Theme.muted)
                 case .spent, .closedAllDay:
                     Circle().stroke(Theme.closedSoft, lineWidth: 9)
                     Image(systemName: "lock")
@@ -32,6 +37,8 @@ struct RingView: View {
             Text(ring.name)
                 .font(Theme.font(13, .semibold))
                 .foregroundStyle(Theme.text)
+                .lineLimit(1)
+                .truncationMode(.middle)
             caption
         }
         .accessibilityElement(children: .ignore)
@@ -42,6 +49,8 @@ struct RingView: View {
         switch ring.state {
         case .open:
             Text("min left").font(Theme.font(11)).foregroundStyle(Theme.muted)
+        case .examOnly:
+            Text("exam only").font(Theme.font(11)).foregroundStyle(Theme.muted)
         case let .spent(reopens):
             Text("till \(reopens.formatted(date: .omitted, time: .shortened))")
                 .font(Theme.font(11, .semibold)).foregroundStyle(Theme.closed)
@@ -53,6 +62,7 @@ struct RingView: View {
     private var accessibilityText: String {
         switch ring.state {
         case let .open(left, _): return "\(ring.name): \(left) minutes left"
+        case .examOnly: return "\(ring.name): open, closed only in exam mode"
         case let .spent(reopens): return "\(ring.name): closed until \(reopens.formatted(date: .omitted, time: .shortened))"
         case .closedAllDay: return "\(ring.name): closed all day"
         }

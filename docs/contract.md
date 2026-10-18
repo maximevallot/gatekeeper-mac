@@ -103,6 +103,9 @@ The engine's `todaySummary(state, now)`, plus who sent it, the pages, and exam m
 - `pages` are paths inside the extension; the app opens `chrome-extension://<extensionId>/<path>` in
   `browser`: "Change something" opens `talk`, "All rules" `rules`, "Your week" `week`, and "End exam mode
   early" `exam`. A missing page falls back to `rules`.
+- `sites` (optional) lists the sites with a daily limit of their own, after the kinds, in the same shape with
+  `kind` "s:<domain>" and `site`. `minutes` and `left` are null for a site closed only in exam mode
+  (`examOnly: true`, status "open" outside exam mode); the Mac shows that ring as "exam only".
 - `exam` is null when exam mode is off. While it is on, every kind comes as `closed` with `"exam": true`;
   the Mac shows those locked "till" `exam.until`, not "all day".
 - `watch` is null, or `{ day, of, until }` during a new install's watch-only week, when `kinds` is empty; the
