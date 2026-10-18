@@ -1,9 +1,19 @@
+import SafariServices
 import SwiftUI
 import UniformTypeIdentifiers
 
 /// The one settings screen. It opens by itself on the first launch.
 struct SettingsView: View {
     @EnvironmentObject var model: AppModel
+    @State private var safariOn: Bool?
+
+    private var safariState: String {
+        switch safariOn {
+        case true?: return "Gatekeeper is on in Safari"
+        case false?: return "Gatekeeper is off in Safari"
+        case nil: return "Gatekeeper for Safari"
+        }
+    }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 22) {
@@ -23,6 +33,16 @@ struct SettingsView: View {
                 if model.loginItemNeedsApproval {
                     Button("Allow it in System Settings") { SMAppServiceHelper.openLoginItems() }
                         .buttonStyle(.link)
+                }
+            }
+
+            section("Safari") {
+                HStack {
+                    Text(safariState).font(Theme.font(14))
+                    Spacer()
+                    Button("Open Safari's extension settings") {
+                        SFSafariApplication.showPreferencesForExtension(withIdentifier: Browsers.safariExtensionID)
+                    }
                 }
             }
 
@@ -69,7 +89,13 @@ struct SettingsView: View {
         .padding(24)
         .frame(width: 460)
         .background(Theme.background)
-        .onAppear { model.refreshLoginItem() }
+        .onAppear {
+            model.refreshLoginItem()
+            SFSafariExtensionManager.getStateOfSafariExtension(withIdentifier: Browsers.safariExtensionID) { state, _ in
+                let on = state?.isEnabled ?? false
+                DispatchQueue.main.async { safariOn = on }
+            }
+        }
     }
 
     private func section<Content: View>(_ title: String, @ViewBuilder _ content: () -> Content) -> some View {

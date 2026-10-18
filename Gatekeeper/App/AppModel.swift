@@ -156,12 +156,13 @@ final class AppModel: ObservableObject {
         return g?.isEmpty == false ? g : nil
     }
 
-    var canOpenExtension: Bool { extensionBrowser != nil && extensionID != nil }
+    var canOpenExtension: Bool { extensionBrowser != nil && (extensionID != nil || snapshot?.base != nil) }
 
     var browserName: String {
         switch extensionBrowser {
         case "com.brave.Browser": return "Brave"
         case "com.google.Chrome": return "Chrome"
+        case "com.apple.Safari": return "Safari"
         case let b?: return Browsers.name(b)
         case nil: return "your browser"
         }
@@ -180,8 +181,8 @@ final class AppModel: ObservableObject {
     func openWeek() { openPage(snapshot?.pages?.week ?? rulesPage) }
 
     private func openPage(_ page: String) {
-        guard let browser = extensionBrowser, let id = extensionID else { return }
-        Browsers.open(page: page, extensionID: id, in: browser)
+        guard let browser = extensionBrowser, let id = extensionID ?? snapshot?.base else { return }
+        Browsers.open(page: page, extensionID: id, base: snapshot?.base, in: browser)
     }
 
     // MARK: Exam mode

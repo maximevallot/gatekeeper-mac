@@ -36,6 +36,15 @@ extension (Brave or Chrome)                     Mac
 4. Files live in `~/Library/Application Support/Gatekeeper/`: the bridge replaces `today.json` atomically;
    the app writes one file per request in `requests/`; the bridge hands each over once and deletes it.
 
+### In Safari
+
+The Safari version of the extension lives inside Gatekeeper.app (`Contents/PlugIns/GatekeeperSafari.appex`,
+copied from `~/gatekeeper-app/extension` at build time). Safari sends its `sendNativeMessage` to the app that
+contains the extension, whatever host name it names, so there is no host manifest and no bridge tool: the
+extension's handler does the same exchange (`BridgeCore`), with `browser` set to `com.apple.Safari`. The
+extension's own address in Safari is `safari-web-extension://<uuid>/`, which no ID gives, so the snapshot may
+carry `base` (below).
+
 ### Why this route
 
 - A local web server in the app (what the Python prototype did on port 7787) can be called by any web page on
@@ -98,6 +107,8 @@ The engine's `todaySummary(state, now)`, plus who sent it, the pages, and exam m
   the Mac shows those locked "till" `exam.until`, not "all day".
 - `watch` is null, or `{ day, of, until }` during a new install's watch-only week, when `kinds` is empty; the
   Mac then says "Watch week · day 2 of 7".
+- `base` (optional) is `runtime.getURL("")`. When present the Mac opens `base + path`; without it,
+  `chrome-extension://<extensionId>/path`. Safari needs it.
 - `browser` is the bundle ID of the browser running the extension. The bridge fills it from its parent process
   and `extensionId` from the calling origin when the extension leaves them out.
 

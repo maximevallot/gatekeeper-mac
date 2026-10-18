@@ -139,3 +139,16 @@ final class FollowTests: XCTestCase {
         XCTAssertEqual(step(snapshot(examUntil: nil), true, 150, 150, true), .wait, "not taken yet: still waiting in the queue")
     }
 }
+
+/// The exchange both the Chrome/Brave bridge and the Safari handler use; only the answers that write nothing.
+final class BridgeCoreTests: XCTestCase {
+    func testRefusesWhatIsNotASnapshot() {
+        XCTAssertEqual(BridgeCore.handle(["type": "hello"], callerID: nil, browser: nil)["error"] as? String, "bad_message")
+        XCTAssertEqual(BridgeCore.handle(nil, callerID: nil, browser: nil)["error"] as? String, "bad_message")
+    }
+
+    func testRefusesAnotherVersion() {
+        let reply = BridgeCore.handle(["type": "snapshot", "v": 2], callerID: nil, browser: "com.apple.Safari")
+        XCTAssertEqual(reply["error"] as? String, "unknown_version")
+    }
+}

@@ -52,6 +52,33 @@ The extension on `~/gatekeeper-app` main (from `94e02f5`) can send today to the 
 
 If the switch says "Reload Gatekeeper once", reload it as in step 2.
 
+## Use it in Safari
+
+Gatekeeper.app also contains the Safari version of the extension, built from `~/gatekeeper-app/extension` each
+time you press Run (that folder is only read). Without the paid Apple developer account, Safari runs it as an
+"unsigned" extension, which you allow by hand:
+
+1. Press Run in Xcode once, so the Mac knows the extension is there.
+2. In Safari, open **Safari › Settings…**, go to **Advanced**, and tick **Show features for web developers**.
+3. Still in Settings, go to the new **Developer** tab and tick **Allow unsigned extensions** (on older Safari it
+   is in the **Develop** menu). Safari asks for your Mac password; that is Safari's own prompt.
+4. Go to **Extensions**, tick **Gatekeeper**, then click **Edit Websites…** and set **Other websites** to
+   **Allow**, so it can send a closed site to the gate.
+5. Gatekeeper's welcome page opens in Safari. Set it up as in Brave; Safari keeps its own rules for now.
+
+**Allow unsigned extensions switches itself off every time Safari quits.** Do step 3 again after each restart of
+Safari; Gatekeeper's rules stay. This goes away once the app is signed with the paid account.
+
+To check it: on Gatekeeper's rules page in Safari, close one kind all day (0 minutes) and visit a site of it,
+for example agar.io under Games. Safari should show the gate instead. Not yet in Safari: daily minutes do not
+count down, because Safari lacks the browser API the extension uses to see whether you are at the computer;
+the extension is being changed for it. Settings in the Mac app has a button that opens Safari's extension
+settings and says whether Gatekeeper is on there.
+
+To link Safari to the Mac app, turn on **Mac app** in Gatekeeper's Settings in Safari, as in Brave. In Safari the
+message goes straight to Gatekeeper.app, with nothing else to set up. Only one browser at a time should have
+Mac app on: the Mac shows whichever sent last.
+
 ## What it shows
 
 - Everything comes from the extension through Chrome native messaging ([docs/contract.md](docs/contract.md)):

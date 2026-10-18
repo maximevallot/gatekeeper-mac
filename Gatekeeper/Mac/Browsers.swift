@@ -65,13 +65,18 @@ enum Browsers {
         return nil
     }
 
+    /// The Safari version of the extension, inside this app.
+    static let safariExtensionID = "com.gatekeeper.mac.safari"
+
     static func name(_ bundleID: String) -> String {
         known[bundleID] ?? bundleID
     }
 
-    /// Opens a page of the extension in the browser that runs it.
-    static func open(page: String, extensionID: String, in bundleID: String) {
-        guard let url = URL(string: "chrome-extension://\(extensionID)/\(page)"),
+    /// Opens a page of the extension in the browser that runs it. `base` is the extension's own address when it
+    /// sent one (Safari's has no ID in it); otherwise chrome-extension://<id>/.
+    static func open(page: String, extensionID: String, base: String? = nil, in bundleID: String) {
+        let root = base ?? "chrome-extension://\(extensionID)/"
+        guard let url = URL(string: root + page),
               let app = NSWorkspace.shared.urlForApplication(withBundleIdentifier: bundleID) else { return }
         let config = NSWorkspace.OpenConfiguration()
         config.activates = true

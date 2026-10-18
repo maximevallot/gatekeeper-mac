@@ -26,6 +26,10 @@ targets:
         codeSign: true
         copy:
           destination: executables
+      # The Safari version of the extension, at Contents/PlugIns/GatekeeperSafari.appex.
+      - target: GatekeeperSafari
+        embed: true
+        codeSign: true
     info:
       path: Gatekeeper/Info.plist
       properties:
@@ -47,6 +51,44 @@ targets:
         ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME: AccentColor
         GENERATE_INFOPLIST_FILE: NO
         COMBINE_HIDPI_IMAGES: YES
+  GatekeeperSafari:
+    # A Safari Web Extension: ~/gatekeeper-app/extension, copied in at build time (read only), plus the handler
+    # that answers its native messages for the Mac link.
+    type: app-extension
+    platform: macOS
+    sources: [Safari, Shared]
+    preBuildScripts: []
+    postCompileScripts:
+      - name: Copy the web extension from ~/gatekeeper-app
+        script: '"$SRCROOT/scripts/copy-web-extension.sh"'
+        basedOnDependencyAnalysis: false
+    info:
+      path: Safari/Info.plist
+      properties:
+        CFBundleDisplayName: Gatekeeper
+        NSExtension:
+          NSExtensionPointIdentifier: com.apple.Safari.web-extension
+          NSExtensionPrincipalClass: $(PRODUCT_MODULE_NAME).SafariWebExtensionHandler
+    entitlements:
+      path: Safari/Safari.entitlements
+      properties:
+        # Safari loads only sandboxed extensions.
+        com.apple.security.app-sandbox: true
+        # The one folder the Mac link uses, shared with Gatekeeper.app and the Chrome/Brave bridge.
+        com.apple.security.temporary-exception.files.home-relative-path.read-write:
+          - /Library/Application Support/Gatekeeper/
+    settings:
+      base:
+        PRODUCT_NAME: GatekeeperSafari
+        PRODUCT_BUNDLE_IDENTIFIER: com.gatekeeper.mac.safari
+        CODE_SIGN_STYLE: Manual
+        CODE_SIGN_IDENTITY: "-"
+        DEVELOPMENT_TEAM: ""
+        ENABLE_HARDENED_RUNTIME: NO
+        GENERATE_INFOPLIST_FILE: NO
+        # The copy script reads ~/gatekeeper-app, outside this project.
+        ENABLE_USER_SCRIPT_SANDBOXING: NO
+        SKIP_INSTALL: YES
   gatekeeper-bridge:
     type: tool
     platform: macOS

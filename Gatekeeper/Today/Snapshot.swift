@@ -42,6 +42,9 @@ struct Snapshot: Codable, Equatable {
     var browser: String?
     var extensionId: String?
     var pages: Pages?
+    /// The extension's own base address, `runtime.getURL("")`. Safari's is safari-web-extension://<uuid>/,
+    /// which no ID gives; without it the Mac builds chrome-extension://<extensionId>/.
+    var base: String?
     var goal: String?
     var reopensAt: Double
     var waiting: Bool?
