@@ -70,9 +70,8 @@ time you press Run (that folder is only read). Without the paid Apple developer 
 Safari; Gatekeeper's rules stay. This goes away once the app is signed with the paid account.
 
 To check it: on Gatekeeper's rules page in Safari, close one kind all day (0 minutes) and visit a site of it,
-for example agar.io under Games. Safari should show the gate instead. Not yet in Safari: daily minutes do not
-count down, because Safari lacks the browser API the extension uses to see whether you are at the computer;
-the extension is being changed for it. Settings in the Mac app has a button that opens Safari's extension
+for example agar.io under Games. Safari should show the gate instead. Daily minutes count while a Safari window
+is in front; Safari cannot tell when you step away, so they keep counting until you switch windows or apps. Settings in the Mac app has a button that opens Safari's extension
 settings and says whether Gatekeeper is on there.
 
 To link Safari to the Mac app, turn on **Mac app** in Gatekeeper's Settings in Safari, as in Brave. In Safari the
