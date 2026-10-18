@@ -58,13 +58,16 @@ Gatekeeper.app also contains the Safari version of the extension, built from `~/
 time you press Run (that folder is only read). Without the paid Apple developer account, Safari runs it as an
 "unsigned" extension, which you allow by hand:
 
-1. Press Run in Xcode once, so the Mac knows the extension is there.
+1. In Xcode, press ■ then ▶, so the latest build (with the Safari extension inside) is the one running.
 2. In Safari, open **Safari › Settings…**, go to **Advanced**, and tick **Show features for web developers**.
-3. Still in Settings, go to the new **Developer** tab and tick **Allow unsigned extensions** (on older Safari it
-   is in the **Develop** menu). Safari asks for your Mac password; that is Safari's own prompt.
-4. Go to **Extensions**, tick **Gatekeeper**, then click **Edit Websites…** and set **Other websites** to
-   **Allow**, so it can send a closed site to the gate.
+3. Go to the **Developer** tab (on older Safari: the **Develop** menu) and tick **Allow unsigned extensions**.
+   Safari asks for your Mac password; that is Safari's own prompt. **Do not quit Safari after this.**
+4. Without quitting, go to **Extensions**. Gatekeeper is in the list; tick it. Click **Edit Websites…** and set
+   **Other websites** to **Allow**, so it can send a closed site to the gate.
 5. Gatekeeper's welcome page opens in Safari. Set it up as in Brave; Safari keeps its own rules for now.
+
+If Gatekeeper is not in the list at step 4, check that **Allow unsigned extensions** is still ticked; if it is,
+quit Gatekeeper (■ in Xcode), press ▶ again, and look at Extensions once more.
 
 **Allow unsigned extensions switches itself off every time Safari quits.** Do step 3 again after each restart of
 Safari; Gatekeeper's rules stay. This goes away once the app is signed with the paid account.

@@ -26,5 +26,7 @@
 	<true/>
 	<key>NSHumanReadableCopyright</key>
 	<string></string>
+	<key>SFSafariWebExtensionConverterVersion</key>
+	<string>27.1</string>
 </dict>
 </plist>

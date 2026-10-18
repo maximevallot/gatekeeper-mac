@@ -1,5 +1,6 @@
 import AppKit
 import Combine
+import SafariServices
 import ServiceManagement
 import os
 
@@ -85,10 +86,24 @@ final class AppModel: ObservableObject {
             notice.show(app: "Mail", until: Date().addingTimeInterval(3600))
         }
         #endif
+        logSafariState()
         applyGuardSettings()
         update()
         timer = Timer.scheduledTimer(withTimeInterval: 2, repeats: true) { [weak self] _ in
             MainActor.assumeIsolated { self?.update() }
+        }
+    }
+
+    /// Writes to the log what Safari says about the Safari version of the extension, for finding out why it does
+    /// not show in Safari's settings: `log show --predicate 'subsystem == "com.gatekeeper.mac"'`.
+    private func logSafariState() {
+        let log = self.log
+        SFSafariExtensionManager.getStateOfSafariExtension(withIdentifier: Browsers.safariExtensionID) { state, error in
+            if let state {
+                log.notice("safari extension found, \(state.isEnabled ? "on" : "off", privacy: .public)")
+            } else {
+                log.notice("safari extension not known to Safari: \(error.map { String(describing: $0) } ?? "no answer", privacy: .public)")
+            }
         }
     }
 

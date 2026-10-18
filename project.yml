@@ -36,6 +36,8 @@ targets:
         CFBundleDisplayName: Gatekeeper
         LSUIElement: true
         LSApplicationCategoryType: public.app-category.productivity
+        # What Apple's Safari Web Extension template puts in the containing app.
+        SFSafariWebExtensionConverterVersion: "27.1"
         NSHumanReadableCopyright: ""
     settings:
       base:
