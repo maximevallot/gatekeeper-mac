@@ -5,6 +5,8 @@ import UniformTypeIdentifiers
 /// The one settings screen. It opens by itself on the first launch.
 struct SettingsView: View {
     @EnvironmentObject var model: AppModel
+    @State private var confirmLeave = false
+
     /// nil: not asked yet; .unknown: Safari doesn't list the extension (QA round 2, M5).
     @State private var safariOn: SafariState?
 
@@ -21,7 +23,7 @@ struct SettingsView: View {
 
     /// Safari's copy keeps rules of its own until Gatekeeper has one account per person (QA round 2, H4).
     private var safariNote: String {
-        let rules = "Safari has its own Gatekeeper rules, separate from Brave's and Chrome's."
+        let rules = "In Safari, join the same Gatekeeper with a code, like any browser."
         if safariOn == .unknown {
             return "In Safari: Settings › Developer › Allow unsigned extensions, then Extensions. It turns off each time Safari quits. " + rules
         }
@@ -49,17 +51,26 @@ struct SettingsView: View {
                 }
             }
 
-            if !model.seenBrowsers.isEmpty {
-                section("Follows") {
-                    Picker("", selection: Binding(get: { model.linkedBrowser ?? "" }, set: { model.follow($0) })) {
-                        ForEach(model.seenBrowsers, id: \.self) { Text(NativeHost.browserName($0)).tag($0) }
+            section("Your Gatekeeper") {
+                if let m = model.membership {
+                    HStack {
+                        Text("This Mac is in your Gatekeeper since \(m.joinedAt.formatted(date: .abbreviated, time: .omitted)).")
+                            .font(Theme.font(14))
+                        Spacer()
+                        Button("Leave") { confirmLeave = true }
                     }
-                    .labelsHidden()
-                    .frame(width: 200, alignment: .leading)
-                    Text("The Mac shows and enforces what this browser's Gatekeeper decides. Another browser with Mac app on is not followed.")
+                    Text("Rules, today's minutes and exam mode come from your Gatekeeper, shared by every browser and this Mac. Leaving loosens nothing: exam mode already on runs to its end.")
                         .font(Theme.font(12)).foregroundStyle(Theme.muted)
                         .fixedSize(horizontal: false, vertical: true)
+                } else {
+                    Text("Not joined. Open the menu-bar popup and type the code from Settings › Add a device in your browser.")
+                        .font(Theme.font(14)).fixedSize(horizontal: false, vertical: true)
                 }
+            }
+            .confirmationDialog("Leave your Gatekeeper on this Mac?", isPresented: $confirmLeave) {
+                Button("Leave", role: .destructive) { Task { await model.leaveAccount() } }
+            } message: {
+                Text("This Mac stops showing today. Exam mode already on keeps hiding apps until it ends.")
             }
 
             section("Safari") {

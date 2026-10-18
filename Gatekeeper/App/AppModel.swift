@@ -6,37 +6,41 @@ import os
 
 /// Everything the menu-bar popup and the settings window show, and the one place that changes it.
 ///
-/// The Mac app has no rules and no exam mode of its own (docs/contract.md; Maxime's decision of 2026-10-17,
-/// "Ask to connect"). It shows what the browser's engine decided and enforces exam mode on the Mac while the
-/// engine says it is on. With no browser connected it asks to connect; an exam mode the browser started keeps
-/// running here until its end, because that is the engine's decision, not the Mac's.
+/// Gatekeeper 0.3: one Gatekeeper per person. The account on the relay is the brain; the Mac app is a device in it,
+/// like each browser (~/brain/outputs/html/2026-10-17-gatekeeper-one-per-person.html, step 5). It joins with the
+/// 6-digit code another device shows, syncs about every 30 seconds, shows the account's Today and enforces its exam
+/// mode on this Mac. It has no rules of its own and never loosens anything: its only request is to start exam mode.
 @MainActor
 final class AppModel: ObservableObject {
-    /// The last snapshot the followed browser sent (contract version 1); nil until it has sent one.
+    static let syncEvery: TimeInterval = 30
+
+    /// This Mac's place in the account; nil until it has joined with a code.
+    @Published private(set) var membership: AccountMembership?
+    /// The account's Today, from the last sync; nil until the first.
     @Published private(set) var snapshot: Snapshot?
-    /// The browser the Mac follows (linked.json): the first to connect, or the one picked in Settings.
-    @Published private(set) var linkedBrowser: String?
-    /// Every browser that has sent a snapshot, newest first, for Settings.
-    @Published private(set) var seenBrowsers: [String] = []
-    /// Exam mode as the followed browser last said, kept until its end across relaunches (QA round 2, H3).
+    /// Exam mode as the account last said, kept until its end across relaunches and while offline (QA round 2, H3).
     @Published private(set) var heldExam: Follow.HeldExam? {
         didSet { save(heldExam, Keys.heldExam) }
     }
-    /// The browser answered in the last two minutes.
+    /// The account answered in the last two minutes.
     @Published private(set) var connected = false
+    /// Why the last join or sync failed, in words for the popup; nil when it worked.
+    @Published private(set) var problem: String?
+    @Published private(set) var joining = false
     /// The clock the screens show, moved once a minute so the menu bar is not redrawn every two seconds.
     /// Exam mode reads the real time (Date()), so it starts and ends to the second.
     @Published private(set) var now = Date()
 
-    // The browser running the extension, from the snapshot or found in the browsers' preferences.
+    // The browser running the extension, found in the browsers' preferences, for opening its pages.
     @Published private(set) var extensionBrowser: String?
     @Published private(set) var extensionID: String?
 
-    /// A start of exam mode asked for on the Mac and not yet confirmed by the browser. The Mac hides apps at
-    /// once, since a tightening is harmless; the popup shows it as on once a snapshot confirms it.
+    /// A start of exam mode asked for on the Mac and not yet confirmed by the account. The Mac hides apps at once,
+    /// since a tightening is harmless; the popup shows it as on once a sync confirms it.
     @Published private(set) var pendingStart: PendingStart?
 
     struct PendingStart: Equatable {
+        var id: String
         var until: Date
         var goal: String
         var asked: Date
@@ -60,10 +64,13 @@ final class AppModel: ObservableObject {
     private let guardian = ExamGuard()
     private let notice = KeptAwayNotice()
     private var timer: Timer?
-    private var snapshotDate: Date?
-    /// When the followed browser last sent a snapshot the Mac could read.
-    var lastHeard: Date? { snapshotDate }
-    private let log = Logger(subsystem: "com.gatekeeper.mac", category: "follow")
+    /// When the account last answered a sync.
+    private(set) var lastSynced: Date?
+    var lastHeard: Date? { lastSynced }
+    private var syncing = false
+    /// Requests waiting for the account to take them (only exam.start), sent with every sync until taken.
+    private var outbox: [[String: Any]] = []
+    private let log = Logger(subsystem: "com.gatekeeper.mac", category: "account")
 
     private enum Keys {
         static let examApps = "examApps"
@@ -81,7 +88,8 @@ final class AppModel: ObservableObject {
         appearance.apply()
         defaults.removeObject(forKey: Keys.oldExamUntil)
         heldExam = Self.load(Follow.HeldExam.self, Keys.heldExam)
-        try? FileManager.default.removeItem(at: NativeHost.oldTodayFile)
+        membership = AccountStore.load()
+        NativeHost.removeOldFiles()
 
         if let found = Browsers.findExtension() {
             extensionBrowser = found.bundleID
@@ -105,6 +113,7 @@ final class AppModel: ObservableObject {
         timer = Timer.scheduledTimer(withTimeInterval: 2, repeats: true) { [weak self] _ in
             MainActor.assumeIsolated { self?.update() }
         }
+        Task { await syncNow() }
     }
 
     /// Writes to the log what Safari says about the Safari version of the extension, for finding out why it does
@@ -135,11 +144,10 @@ final class AppModel: ObservableObject {
     private func update() {
         let t = Date()
         if Int(t.timeIntervalSince1970 / 60) != Int(now.timeIntervalSince1970 / 60) { now = t }
-        reloadSnapshot()
-        let isConnected = Follow.connected(lastMessage: snapshotDate, now: t)
+        let isConnected = membership != nil && Follow.connected(lastMessage: lastSynced, now: t)
         if isConnected != connected {
             connected = isConnected
-            log.notice("browser \(isConnected ? "connected" : "not connected", privacy: .public)")
+            log.notice("account \(isConnected ? "reachable" : "not reachable", privacy: .public)")
         }
         followPendingStart(t)
         if examOn != guardian.active {
@@ -147,42 +155,12 @@ final class AppModel: ObservableObject {
         }
         guardian.setActive(examOn)
         guardian.sweep()
-    }
-
-    /// Reads the followed browser's snapshot when its file changed. Only a snapshot the Mac can read, and no older
-    /// than the last one, counts; a file it cannot read does not count as the browser speaking (QA round 2, H2).
-    private func reloadSnapshot() {
-        let linked = NativeHost.linked()
-        if linked != linkedBrowser {
-            linkedBrowser = linked
-            snapshot = nil
-            snapshotDate = nil
-            if let b = linked, Browsers.known[b] != nil { extensionBrowser = b }
-            applyGuardSettings()
+        if membership == nil, !joining, let code = NativeHost.takePairCode() {
+            // A browser of the same account handed over a fresh code through native messaging.
+            Task { await join(code: code) }
         }
-        let seen = NativeHost.seenBrowsers().map(\.key)
-        if seen != seenBrowsers { seenBrowsers = seen }
-        guard let key = linked else { return }
-        let url = NativeHost.snapshotFile(key)
-        guard let modified = (try? FileManager.default.attributesOfItem(atPath: url.path))?[.modificationDate] as? Date,
-              modified != snapshotDate,
-              let data = try? Data(contentsOf: url),
-              let s = try? JSONDecoder().decode(Snapshot.self, from: data), s.v == 1,
-              s.at >= (snapshot?.at ?? 0)
-        else { return }
-        snapshotDate = modified
-        snapshot = s
-        let held = Follow.hold(heldExam, seeing: s)
-        if held != heldExam { heldExam = held }
-        if let b = s.browser, Browsers.known[b] != nil { extensionBrowser = b }
-        if let id = s.extensionId { extensionID = id }
-        applyGuardSettings()
-    }
-
-    /// Settings: follow another browser that has connected. Exam mode the Mac holds keeps running to its end.
-    func follow(_ key: String) {
-        NativeHost.setLinked(key)
-        update()
+        if let last = lastSynced, t.timeIntervalSince(last) < Self.syncEvery { return }
+        Task { await syncNow() }
     }
 
     private func applyGuardSettings() {
@@ -192,9 +170,94 @@ final class AppModel: ObservableObject {
         guardian.sweep()
     }
 
+    // MARK: The account
+
+    /// Joins the account with the 6-digit code another device shows under Settings › Add a device.
+    func join(code: String) async {
+        guard membership == nil, !joining else { return }
+        joining = true
+        defer { joining = false }
+        do {
+            let m = try await AccountClient(relay: AccountClient.defaultRelay).join(code: code)
+            try AccountStore.save(m)
+            membership = m
+            problem = nil
+            log.notice("joined the account as device \(m.deviceId, privacy: .public)")
+            await syncNow()
+        } catch let failure as AccountClient.Failure {
+            problem = Self.words(for: failure)
+        } catch {
+            problem = "Couldn't save this Mac's place in your Gatekeeper."
+        }
+    }
+
+    /// One sync: send the outbox, take the account's Today. Every 30 seconds, and at once after a request.
+    func syncNow() async {
+        guard let m = membership, !syncing else { return }
+        syncing = true
+        defer { syncing = false }
+        do {
+            let synced = try await AccountClient(relay: URL(string: m.relay) ?? AccountClient.defaultRelay)
+                .sync(m, requests: outbox)
+            lastSynced = Date()
+            problem = nil
+            outbox.removeAll { ($0["id"] as? String).map(synced.taken.contains) ?? false }
+            accept(synced.snapshot)
+            update()
+        } catch AccountClient.Failure.removed {
+            // Removed from another device, or the account was deleted: carry on with what the Mac knows (exam mode
+            // held to its end) and ask for a code again.
+            AccountStore.clear()
+            membership = nil
+            snapshot = nil
+            outbox.removeAll()
+            problem = "This Mac was removed from your Gatekeeper. Join again with a code."
+            update()
+        } catch let failure as AccountClient.Failure {
+            problem = Self.words(for: failure)
+        } catch {
+            problem = "Something went wrong talking to your Gatekeeper."
+        }
+    }
+
+    /// Only a snapshot no older than the last counts; exam mode is held from it (QA round 2, H2, H3).
+    private func accept(_ s: Snapshot) {
+        guard s.v == 1, s.at >= (snapshot?.at ?? 0) else { return }
+        snapshot = s
+        let held = Follow.hold(heldExam, seeing: s)
+        if held != heldExam { heldExam = held }
+    }
+
+    /// Leave this account, on this Mac. Leaving loosens nothing: exam mode the Mac holds runs to its end.
+    func leaveAccount() async {
+        guard let m = membership else { return }
+        await AccountClient(relay: URL(string: m.relay) ?? AccountClient.defaultRelay).leave(m)
+        AccountStore.clear()
+        membership = nil
+        snapshot = nil
+        outbox.removeAll()
+        lastSynced = nil
+        update()
+    }
+
+    static func words(for failure: AccountClient.Failure) -> String {
+        switch failure {
+        case let .badCode(reason):
+            switch reason {
+            case "code_expired", "expired": return "That code has expired. Codes work for 10 minutes; get a new one."
+            case "code_used", "used": return "That code was already used. Get a new one."
+            default: return "That code didn't work. Check the 6 digits, or get a new one."
+            }
+        case .removed: return "This Mac was removed from your Gatekeeper. Join again with a code."
+        case .unreachable: return "Can't reach your Gatekeeper. Check the internet connection."
+        case let .server(status, _): return "Your Gatekeeper didn't answer properly (\(status)). It will try again."
+        case .badReply: return "Your Gatekeeper sent something this Mac can't read. Update Gatekeeper for Mac."
+        }
+    }
+
     // MARK: Today
 
-    /// The day the snapshot describes has ended and the browser has not sent the new one. The Mac does not
+    /// The day the snapshot describes has ended and the account has not sent the new one. The Mac does not
     /// reopen anything on its own clock (contract; QA finding H2).
     var isStale: Bool { snapshot.map { now >= $0.reopens } ?? false }
 
@@ -218,7 +281,7 @@ final class AppModel: ObservableObject {
         }
     }
 
-    // The pages the extension names in its snapshot; without one, the rules page, which every version has.
+    // The pages the extension names; without them, the rules page, which every version has.
     private var rulesPage: String { snapshot?.pages?.rules ?? "pages/rules.html" }
 
     /// The one chat. In a full tab it needs ?from=rules, or it takes the toolbar popup's narrow layout.
@@ -237,49 +300,48 @@ final class AppModel: ObservableObject {
 
     // MARK: Exam mode
 
-    /// Exam mode as the browser's engine last said, even if the browser has since closed: it runs to its end.
+    /// Exam mode as the account last said, even offline: it runs to its end.
     var confirmedExamUntil: Date? { Follow.confirmedExam(heldExam, now: Date()) }
 
-    /// What the Mac enforces: the engine's exam mode, or a start the browser is confirming.
+    /// What the Mac enforces: the account's exam mode, or a start the account is confirming.
     var examUntil: Date? { Follow.enforcedExam(heldExam, pendingUntil: pendingStart?.until, now: Date()) }
 
     var examOn: Bool { examUntil != nil }
 
-    /// Starting or extending exam mode is a tightening: a request to the browser's engine, enforced here at once.
-    /// Only while the browser is connected; without it the Mac has no exam mode of its own.
+    /// Starting or extending exam mode is a tightening: a request to the account, enforced here at once. Only while
+    /// the account answers; without it the Mac has no exam mode of its own.
     func startExam(until: Date, goal: String) {
         guard connected, until > Date() else { return }
         let t = Date()
-        pendingStart = PendingStart(until: until, goal: goal.trimmingCharacters(in: .whitespacesAndNewlines),
-                                    asked: t, queued: t)
+        pendingStart = PendingStart(id: UUID().uuidString, until: until,
+                                    goal: goal.trimmingCharacters(in: .whitespacesAndNewlines), asked: t, queued: t)
         queueExamStart()
         update()
+        Task { await syncNow() }
     }
 
     /// Ending early is a loosening, so it is never done on the Mac: this opens the browser's chat, where the
     /// agent decides (Maxime's decision of 2026-10-17).
     func endExamEarly() { openTalk() }
 
-    // MARK: Requests to the extension (docs/contract.md)
-
     private func queueExamStart() {
         guard let p = pendingStart else { return }
-        Requests.removeAll(ofType: "exam.start")
-        var request: [String: Any] = ["type": "exam.start", "until": (p.until.timeIntervalSince1970 * 1000).rounded()]
+        outbox.removeAll { $0["type"] as? String == "exam.start" }
+        var request: [String: Any] = ["id": p.id, "type": "exam.start", "until": (p.until.timeIntervalSince1970 * 1000).rounded()]
         if !p.goal.isEmpty { request["goal"] = p.goal }
-        Requests.queue(request)
+        outbox.append(request)
     }
 
     private func followPendingStart(_ t: Date) {
         guard let p = pendingStart else { return }
-        switch Follow.pendingStep(until: p.until, asked: p.asked, queued: p.queued,
-                                  stillQueued: Requests.isQueued(type: "exam.start"),
+        let stillQueued = outbox.contains { $0["type"] as? String == "exam.start" }
+        switch Follow.pendingStep(until: p.until, asked: p.asked, queued: p.queued, stillQueued: stillQueued,
                                   snapshot: snapshot, connected: connected, now: t) {
         case .confirmed:
             pendingStart = nil
         case .drop:
             pendingStart = nil
-            Requests.removeAll(ofType: "exam.start")
+            outbox.removeAll { $0["type"] as? String == "exam.start" }
         case .resend:
             pendingStart?.queued = t
             queueExamStart()

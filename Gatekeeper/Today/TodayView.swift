@@ -12,7 +12,9 @@ struct PopupView: View {
         Group {
             switch screen {
             case .today:
-                if model.connected { TodayView(screen: $screen) } else { ConnectView(screen: $screen) }
+                if model.membership == nil { JoinView(screen: $screen) }
+                else if model.connected { TodayView(screen: $screen) }
+                else { ConnectView(screen: $screen) }
             case .startExam:
                 StartExamView(screen: $screen)
             }
@@ -26,8 +28,64 @@ struct PopupView: View {
     }
 }
 
-/// No browser has answered in the last two minutes. The Mac has no rules and no sample day of its own, so it
-/// says how to connect, in one step. An exam mode the browser started still runs here until its end.
+/// This Mac has not joined a Gatekeeper account. It has no rules of its own, so it asks for the 6-digit code another
+/// device of the account shows under Settings › Add a device. A browser of the account can also hand the code over
+/// itself, through native messaging.
+struct JoinView: View {
+    @EnvironmentObject var model: AppModel
+    @Binding var screen: PopupView.Screen
+    @State private var code = ""
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 16) {
+            HStack(alignment: .center) {
+                Text("Gatekeeper").font(Theme.font(22, .heavy))
+                Spacer()
+                ModeMenu(screen: $screen)
+            }
+
+            Text("Join your Gatekeeper").font(Theme.font(15, .semibold))
+            Text("In Gatekeeper in your browser, open Settings › Add a device, and type the 6-digit code here.")
+                .font(Theme.font(13)).foregroundStyle(Theme.muted)
+                .fixedSize(horizontal: false, vertical: true)
+
+            TextField("123456", text: $code)
+                .textFieldStyle(.roundedBorder)
+                .font(.system(size: 22, weight: .semibold, design: .monospaced))
+                .multilineTextAlignment(.center)
+                .onChange(of: code) { _, new in code = String(new.filter(\.isNumber).prefix(6)) }
+                .onSubmit(join)
+
+            if let problem = model.problem {
+                Text(problem).font(Theme.font(12, .semibold)).foregroundStyle(Theme.closed)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+
+            if let until = model.examUntil {
+                Text("Exam mode runs till \(Day.until(until)). Apps stay hidden.")
+                    .font(Theme.font(13, .medium)).foregroundStyle(Theme.accent)
+            }
+
+            PrimaryButton(title: model.joining ? "Joining…" : "Join", systemImage: "person.badge.plus",
+                          color: Theme.accentFill, action: join)
+                .disabled(code.count != 6 || model.joining)
+
+            Text(model.canOpenExtension
+                 ? "New to Gatekeeper? Set it up in \(model.browserName) first; finishing the welcome creates your Gatekeeper."
+                 : "New to Gatekeeper? Add the extension to Brave, Chrome or Safari first; finishing its welcome creates your Gatekeeper.")
+                .font(Theme.font(12)).foregroundStyle(Theme.muted)
+                .fixedSize(horizontal: false, vertical: true)
+        }
+    }
+
+    private func join() {
+        guard code.count == 6 else { return }
+        Task { await model.join(code: code) }
+    }
+}
+
+/// The account has not answered in the last two minutes: offline, or the relay is down. The Mac keeps enforcing an
+/// exam mode it already knows about until its end.
 struct ConnectView: View {
     @EnvironmentObject var model: AppModel
     @Binding var screen: PopupView.Screen
@@ -40,24 +98,13 @@ struct ConnectView: View {
                 ModeMenu(screen: $screen)
             }
 
-            Text("Connect Gatekeeper in your browser to see today and start exam mode here.")
+            Text(model.lastHeard.map { "Can't reach your Gatekeeper since \(Day.until($0))." } ?? "Reaching your Gatekeeper…")
                 .font(Theme.font(15, .medium))
                 .fixedSize(horizontal: false, vertical: true)
 
-            if let heard = model.lastHeard {
-                // Connected before: the switch is already on; the browser is closed or asleep (QA round 2, M4).
-                Text("\(model.browserName) hasn't sent anything since \(Day.until(heard)). Open it to see today.")
-                    .font(Theme.font(13)).foregroundStyle(Theme.muted)
-                    .fixedSize(horizontal: false, vertical: true)
-            } else if model.canOpenExtension {
-                Text("In \(model.browserName), open Gatekeeper's Settings and turn on Mac app.")
-                    .font(Theme.font(13)).foregroundStyle(Theme.muted)
-                    .fixedSize(horizontal: false, vertical: true)
-            } else {
-                Text("Add the Gatekeeper extension to Brave, Chrome or Safari first.")
-                    .font(Theme.font(13)).foregroundStyle(Theme.muted)
-                    .fixedSize(horizontal: false, vertical: true)
-            }
+            Text(model.problem ?? "It tries again every 30 seconds. Your browser keeps enforcing your rules meanwhile.")
+                .font(Theme.font(13)).foregroundStyle(Theme.muted)
+                .fixedSize(horizontal: false, vertical: true)
 
             if let until = model.examUntil {
                 HStack(spacing: 12) {
@@ -71,9 +118,8 @@ struct ConnectView: View {
                 .background(Theme.card, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
             }
 
-            if model.canOpenExtension {
-                PrimaryButton(title: "Open \(model.browserName)", systemImage: "arrow.up.forward.app",
-                              color: Theme.accentFill, action: model.openRules)
+            PrimaryButton(title: "Try now", systemImage: "arrow.clockwise", color: Theme.accentFill) {
+                Task { await model.syncNow() }
             }
         }
     }

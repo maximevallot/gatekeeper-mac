@@ -10,7 +10,7 @@ settings:
       SWIFT_ACTIVE_COMPILATION_CONDITIONS: DEBUG
   base:
     SWIFT_VERSION: "5.0"
-    MARKETING_VERSION: "0.2.0"
+    MARKETING_VERSION: "0.3.0"
     CURRENT_PROJECT_VERSION: "1"
 targets:
   Gatekeeper:
@@ -116,6 +116,8 @@ targets:
       - Tests
       - Shared
       - Gatekeeper/Today/Snapshot.swift
+      - Gatekeeper/Account/AccountClient.swift
+      - Gatekeeper/Account/AccountStore.swift
       - Gatekeeper/Exam/ExamGuard.swift
       - Gatekeeper/Mac/Browsers.swift
     settings:

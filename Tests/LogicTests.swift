@@ -201,7 +201,7 @@ final class LenientDecodingTests: XCTestCase {
     }
 }
 
-/// The bridge's exchange with two browsers, in a scratch folder (QA round 2, C1, C2, H1, L10).
+/// The bridge's exchange since 0.3, in a scratch folder: no stored snapshots, a pairing code kept until the Mac joins.
 final class BridgeExchangeTests: XCTestCase {
     var dir: URL!
 
@@ -215,30 +215,38 @@ final class BridgeExchangeTests: XCTestCase {
         try? FileManager.default.removeItem(at: dir)
     }
 
-    func snap(_ at: Double, exam: Double? = nil) -> [String: Any] {
+    func snap(_ at: Double, exam: Double? = nil, pair: String? = nil) -> [String: Any] {
         var s: [String: Any] = ["type": "snapshot", "v": 1, "at": at, "reopensAt": 9e12, "kinds": []]
         if let exam { s["exam"] = ["until": exam] }
+        if let pair { s["pairCode"] = pair }
         return s
     }
 
-    func testTheFirstBrowserIsFollowedAndTheOtherIsTurnedAway() throws {
-        try FileManager.default.createDirectory(at: NativeHost.requestsFolder, withIntermediateDirectories: true)
-        try Data(#"{"id":"r1","type":"exam.start","until":9e12}"#.utf8).write(to: NativeHost.requestsFolder.appendingPathComponent("1-r1.json"))
+    func testAPairingCodeIsKeptOnceUntilTheMacJoins() throws {
+        let r = BridgeCore.handle(snap(1, pair: "123456"), callerID: nil, browser: "com.apple.Safari", appVersion: "0.3.0")
+        XCTAssertEqual(r.reply["ok"] as? Bool, true)
+        XCTAssertEqual((r.reply["mac"] as? [String: Any])?["joined"] as? Bool, false)
+        XCTAssertEqual(NativeHost.takePairCode(), "123456")
+        XCTAssertNil(NativeHost.takePairCode(), "read once")
+    }
 
-        let safari = BridgeCore.handle(snap(1), callerID: nil, browser: "com.apple.Safari", appVersion: "0.2.0")
-        XCTAssertEqual(safari.reply["ok"] as? Bool, true)
-        XCTAssertEqual((safari.reply["requests"] as? [[String: Any]])?.count, 1)
-        XCTAssertEqual(NativeHost.linked(), "com.apple.Safari")
+    func testNoPairingCodeOnceJoined() throws {
+        try AccountStore.save(AccountMembership(relay: "http://localhost:8787", deviceId: "d1", deviceKey: "k", accountId: nil, joinedAt: Date()))
+        _ = BridgeCore.handle(snap(1, pair: "123456"), callerID: nil, browser: "com.brave.Browser", appVersion: nil)
+        XCTAssertNil(NativeHost.takePairCode())
+    }
 
-        try Data(#"{"id":"r2","type":"exam.start","until":9e12}"#.utf8).write(to: NativeHost.requestsFolder.appendingPathComponent("2-r2.json"))
-        let brave = BridgeCore.handle(snap(2, exam: 9e12), callerID: "kfikbbdocggfgfhaegkgkfomhmacdbjp", browser: "com.brave.Browser", appVersion: "0.2.0")
-        XCTAssertEqual(brave.reply["error"] as? String, "other_browser_linked")
-        XCTAssertEqual(brave.reply["linkedName"] as? String, "Safari")
-        XCTAssertNil(brave.reply["requests"], "another browser is handed no request")
-        XCTAssertNil(brave.examUntil)
-        XCTAssertTrue(FileManager.default.fileExists(atPath: NativeHost.snapshotFile("com.brave.Browser").path), "its snapshot is kept apart")
-        XCTAssertEqual((try FileManager.default.contentsOfDirectory(atPath: NativeHost.requestsFolder.path)).count, 1, "the request waits for Safari")
-        XCTAssertEqual((brave.reply["mac"] as? [String: Any])?["version"] as? String, "0.2.0")
+    func testAStaleOrMalformedCodeIsIgnored() {
+        _ = BridgeCore.handle(snap(1, pair: "12ab56"), callerID: nil, browser: nil, appVersion: nil)
+        XCTAssertNil(NativeHost.takePairCode())
+        NativeHost.savePairCode("654321")
+        XCTAssertNil(NativeHost.takePairCode(now: Date().addingTimeInterval(601)), "older than the code's 10 minutes")
+    }
+
+    func testExamModeOnAsksForTheAppToRun() {
+        let r = BridgeCore.handle(snap(1, exam: (Date().timeIntervalSince1970 + 3600) * 1000), callerID: nil, browser: nil, appVersion: nil)
+        XCTAssertNotNil(r.examUntil)
+        XCTAssertFalse(FileManager.default.fileExists(atPath: dir.appendingPathComponent("snapshots").path), "no snapshot is stored any more")
     }
 
     func testASnapshotTheMacCannotReadIsRefusedWithTheReason() {
@@ -247,7 +255,6 @@ final class BridgeExchangeTests: XCTestCase {
         let r = BridgeCore.handle(bad, callerID: nil, browser: "com.apple.Safari", appVersion: nil)
         XCTAssertEqual(r.reply["error"] as? String, "bad_message")
         XCTAssertNotNil(r.reply["reason"])
-        XCTAssertNil(NativeHost.linked(), "a refused browser does not become the followed one")
     }
 
     func testTheFolderIsInTheRealHomeNotASandbox() {
@@ -255,5 +262,91 @@ final class BridgeExchangeTests: XCTestCase {
         XCTAssertFalse(NativeHost.folder.path.contains("/Library/Containers/"))
         XCTAssertTrue(NativeHost.folder.path.hasSuffix("Library/Application Support/Gatekeeper"))
         setenv("GATEKEEPER_FOLDER", dir.path, 1)
+    }
+
+    func testTheDeviceKeyFileIsReadableByThisUserOnly() throws {
+        try AccountStore.save(AccountMembership(relay: "r", deviceId: "d", deviceKey: "secret", accountId: "a", joinedAt: Date()))
+        let mode = try FileManager.default.attributesOfItem(atPath: AccountStore.file.path)[.posixPermissions] as? Int
+        XCTAssertEqual(mode, 0o600)
+        XCTAssertEqual(AccountStore.load()?.deviceKey, "secret")
+        AccountStore.clear()
+        XCTAssertNil(AccountStore.load())
+    }
+}
+
+/// A stand-in relay for the account client: answers each path with a set status and body.
+final class StubRelay: URLProtocol {
+    static var answers: [String: (Int, [String: Any])] = [:]
+    static var lastBody: [String: Any]?
+    static var lastAuth: String?
+
+    override class func canInit(with request: URLRequest) -> Bool { true }
+    override class func canonicalRequest(for request: URLRequest) -> URLRequest { request }
+    override func startLoading() {
+        let path = request.url?.path ?? ""
+        Self.lastAuth = request.value(forHTTPHeaderField: "Authorization")
+        if let stream = request.httpBodyStream {
+            stream.open()
+            var data = Data()
+            var buf = [UInt8](repeating: 0, count: 4096)
+            while stream.hasBytesAvailable { let n = stream.read(&buf, maxLength: buf.count); if n <= 0 { break }; data.append(buf, count: n) }
+            stream.close()
+            Self.lastBody = try? JSONSerialization.jsonObject(with: data) as? [String: Any]
+        }
+        let (status, body) = Self.answers[path] ?? (404, ["error": "not_found"])
+        let response = HTTPURLResponse(url: request.url!, statusCode: status, httpVersion: nil, headerFields: nil)!
+        client?.urlProtocol(self, didReceive: response, cacheStoragePolicy: .notAllowed)
+        client?.urlProtocol(self, didLoad: (try? JSONSerialization.data(withJSONObject: body)) ?? Data())
+        client?.urlProtocolDidFinishLoading(self)
+    }
+    override func stopLoading() {}
+}
+
+final class AccountClientTests: XCTestCase {
+    var client: AccountClient!
+
+    override func setUp() {
+        let config = URLSessionConfiguration.ephemeral
+        config.protocolClasses = [StubRelay.self]
+        client = AccountClient(relay: URL(string: "http://relay.test")!, session: URLSession(configuration: config))
+        StubRelay.answers = [:]
+    }
+
+    func testJoinWithACode() async throws {
+        StubRelay.answers[AccountClient.API.join] = (200, ["deviceId": "dev-1", "deviceKey": "key-1", "accountId": "acc-1"])
+        let m = try await client.join(code: "12 34 56")
+        XCTAssertEqual(m.deviceId, "dev-1")
+        XCTAssertEqual(m.deviceKey, "key-1")
+        XCTAssertEqual(StubRelay.lastBody?["code"] as? String, "123456")
+        XCTAssertEqual((StubRelay.lastBody?["device"] as? [String: Any])?["kind"] as? String, "mac")
+    }
+
+    func testAWrongCodeSaysWhy() async {
+        StubRelay.answers[AccountClient.API.join] = (410, ["error": "code_expired"])
+        do { _ = try await client.join(code: "000000"); XCTFail() } catch {
+            XCTAssertEqual(error as? AccountClient.Failure, .badCode("code_expired"))
+        }
+    }
+
+    func testSyncSendsTheRequestsAndReadsToday() async throws {
+        let snapshot: [String: Any] = ["v": 1, "at": 5, "reopensAt": 9e12,
+                                       "kinds": [["kind": "social", "label": "Social media", "status": "open", "minutes": 15, "left": 9]],
+                                       "exam": ["until": 9e12, "goal": "midterm"]]
+        StubRelay.answers[AccountClient.API.sync] = (200, ["snapshot": snapshot, "taken": ["r1"]])
+        let m = AccountMembership(relay: "http://relay.test", deviceId: "dev-1", deviceKey: "key-1", accountId: nil, joinedAt: Date())
+        let synced = try await client.sync(m, requests: [["id": "r1", "type": "exam.start", "until": 9e12]])
+        XCTAssertEqual(synced.snapshot.kinds.first?.left, 9)
+        XCTAssertEqual(synced.snapshot.exam?.goal, "midterm")
+        XCTAssertEqual(synced.taken, ["r1"])
+        XCTAssertEqual(StubRelay.lastAuth, "Bearer key-1")
+        XCTAssertEqual((StubRelay.lastBody?["requests"] as? [[String: Any]])?.first?["type"] as? String, "exam.start")
+    }
+
+    func testARemovedDeviceIsToldApart() async {
+        StubRelay.answers[AccountClient.API.sync] = (401, ["error": "device_removed"])
+        let m = AccountMembership(relay: "http://relay.test", deviceId: "d", deviceKey: "k", accountId: nil, joinedAt: Date())
+        do { _ = try await client.sync(m, requests: []); XCTFail() } catch {
+            XCTAssertEqual(error as? AccountClient.Failure, .removed)
+        }
     }
 }

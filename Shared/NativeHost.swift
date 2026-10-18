@@ -1,9 +1,8 @@
 import Foundation
 
-/// What the app and the bridges share: the native-messaging host's name and the files they hand each other
-/// (docs/contract.md). Each bridge (the Chrome/Brave tool and the Safari extension) writes its browser's snapshot to
-/// snapshots/<browser>.json and claims linked.json if no browser has; the app follows the linked browser only,
-/// and fills requests/, which only the linked browser is handed.
+/// What the app and the bridges share: the native-messaging host's name and Gatekeeper's folder (docs/contract.md).
+/// Since 0.3 the account on the relay carries Today and exam mode; native messaging only reopens the Mac app while
+/// exam mode is on, and hands over a pairing code so the Mac can join the account a browser is already in.
 enum NativeHost {
     static let name = "com.gatekeeper.helper"
 
@@ -30,62 +29,40 @@ enum NativeHost {
         return realHome.appendingPathComponent("Library/Application Support/Gatekeeper", isDirectory: true)
     }
 
-    static var snapshotsFolder: URL { folder.appendingPathComponent("snapshots", isDirectory: true) }
-    static var requestsFolder: URL { folder.appendingPathComponent("requests", isDirectory: true) }
-    static var linkedFile: URL { folder.appendingPathComponent("linked.json") }
-    /// Where the bridge wrote before the Mac followed one browser; removed by the app at launch.
-    static var oldTodayFile: URL { folder.appendingPathComponent("today.json") }
+    /// A 6-digit code a browser of the account handed over, for the Mac to join with (pair.json).
+    static var pairFile: URL { folder.appendingPathComponent("pair.json") }
 
-    /// The name a browser's snapshot is kept under: its bundle ID, or the extension ID when the bridge could not
-    /// tell which browser called.
-    static func key(browser: String?, extensionId: String?) -> String {
-        let raw = browser ?? extensionId.map { "ext-" + $0 } ?? "unknown"
-        let allowed = CharacterSet.alphanumerics.union(CharacterSet(charactersIn: ".-_"))
-        return String(String.UnicodeScalarView(raw.unicodeScalars.filter { allowed.contains($0) }))
+    /// Files from 0.1 and 0.2, when the Mac followed one browser's snapshot.
+    static func removeOldFiles() {
+        for name in ["today.json", "linked.json", "snapshots", "requests"] {
+            try? FileManager.default.removeItem(at: folder.appendingPathComponent(name))
+        }
     }
 
-    static func snapshotFile(_ key: String) -> URL { snapshotsFolder.appendingPathComponent(key + ".json") }
+    /// A code is good for 10 minutes on the account's side; one older than that here is not tried.
+    static let pairCodeLife: TimeInterval = 600
 
-    /// The browser the Mac follows, or nil if none has connected yet.
-    static func linked() -> String? {
-        guard let data = try? Data(contentsOf: linkedFile),
+    static func savePairCode(_ code: String) {
+        try? FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
+        let body: [String: Any] = ["code": code, "at": Date().timeIntervalSince1970]
+        if let data = try? JSONSerialization.data(withJSONObject: body) {
+            try? data.write(to: pairFile, options: .atomic)
+            try? FileManager.default.setAttributes([.posixPermissions: 0o600], ofItemAtPath: pairFile.path)
+        }
+    }
+
+    /// The handed-over code, once: it is deleted as it is read.
+    static func takePairCode(now: Date = Date()) -> String? {
+        guard let data = try? Data(contentsOf: pairFile),
               let obj = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else { return nil }
-        return obj["browser"] as? String
+        try? FileManager.default.removeItem(at: pairFile)
+        guard let code = obj["code"] as? String, let at = obj["at"] as? Double,
+              now.timeIntervalSince1970 - at < pairCodeLife else { return nil }
+        return code
     }
 
-    /// Makes `key` the followed browser if none is, atomically, so two browsers calling at once cannot both win.
-    /// Returns the followed browser.
-    static func claimLinked(_ key: String) -> String {
-        if let current = linked() { return current }
-        try? FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
-        let body = (try? JSONSerialization.data(withJSONObject: ["browser": key])) ?? Data()
-        let fd = open(linkedFile.path, O_WRONLY | O_CREAT | O_EXCL, 0o644)
-        if fd >= 0 {
-            body.withUnsafeBytes { _ = write(fd, $0.baseAddress, body.count) }
-            close(fd)
-            return key
-        }
-        return linked() ?? key
-    }
-
-    /// The app's Settings picks another browser to follow.
-    static func setLinked(_ key: String) {
-        try? FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
-        if let data = try? JSONSerialization.data(withJSONObject: ["browser": key]) {
-            try? data.write(to: linkedFile, options: .atomic)
-        }
-    }
-
-    /// The browsers that have sent a snapshot, newest first.
-    static func seenBrowsers() -> [(key: String, at: Date)] {
-        let fm = FileManager.default
-        guard let names = try? fm.contentsOfDirectory(atPath: snapshotsFolder.path) else { return [] }
-        return names.filter { $0.hasSuffix(".json") }.compactMap { name in
-            let url = snapshotsFolder.appendingPathComponent(name)
-            guard let date = (try? fm.attributesOfItem(atPath: url.path))?[.modificationDate] as? Date else { return nil }
-            return (String(name.dropLast(5)), date)
-        }.sorted { $0.at > $1.at }
-    }
+    /// The Mac has joined the account (account.json exists).
+    static var macJoined: Bool { FileManager.default.fileExists(atPath: folder.appendingPathComponent("account.json").path) }
 
     /// A short name for a browser key, for messages.
     static func browserName(_ key: String) -> String {

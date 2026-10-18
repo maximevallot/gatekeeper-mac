@@ -13,8 +13,8 @@
 		1685EA00552C7D6875F3DC9C /* Snapshot.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4DF10DD89DCB9DE1EC9DE7EC /* Snapshot.swift */; };
 		1B35B7585A0684D6CF205401 /* Browsers.swift in Sources */ = {isa = PBXBuildFile; fileRef = 69682C2E07CCDA217A70EC27 /* Browsers.swift */; };
 		1C6A6F212C1D247736D7AB69 /* main.swift in Sources */ = {isa = PBXBuildFile; fileRef = F5C519B06442447AC49CFCD8 /* main.swift */; };
-		1D99503A2F3F17AD716F26D8 /* Requests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BBF83AB380686AB6F1DD87C /* Requests.swift */; };
 		1FEC3365C431C4C1435C7C06 /* KeptAwayNotice.swift in Sources */ = {isa = PBXBuildFile; fileRef = C4D39E6F7C7A7C931EB0D839 /* KeptAwayNotice.swift */; };
+		219A3A0EC4BFAAF1FB37B7E4 /* AccountStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF971CA50215436ADD7F2E3C /* AccountStore.swift */; };
 		273ADF243AD0B8FB1F027FAB /* GatekeeperSafari.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 5C124771624657748CCA2DD2 /* GatekeeperSafari.appex */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		342CC52DD896A494E829AAB7 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1709A5C113CDA3B9CD42A7D /* SettingsView.swift */; };
 		35FDBCE80FDACEA4B906F4FA /* ExamGuard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 09DF7DDB644F1C3E338BCA2F /* ExamGuard.swift */; };
@@ -28,6 +28,7 @@
 		5EF97F72FEB4FAA0EF34A812 /* NativeHost.swift in Sources */ = {isa = PBXBuildFile; fileRef = 35C74CD4B33CD555F9A4ECE5 /* NativeHost.swift */; };
 		62F61B78566305E5E425361D /* Snapshot.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4DF10DD89DCB9DE1EC9DE7EC /* Snapshot.swift */; };
 		7B3768AE3E26E7D93894B198 /* ExamViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = 72B47D6CA449EF6384574998 /* ExamViews.swift */; };
+		7B72EA82373F07B754669076 /* AccountStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF971CA50215436ADD7F2E3C /* AccountStore.swift */; };
 		85E5D3260BCEA239F1D3E75A /* BridgeCore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 24AB34DE24119E0E29A2750D /* BridgeCore.swift */; };
 		8DEBC85807E3C66948336CF6 /* SafariWebExtensionHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = FBC653646B7E0A0B9CCB19E2 /* SafariWebExtensionHandler.swift */; };
 		97FA7A66E69EAA31A94E6EA5 /* BridgeCore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 24AB34DE24119E0E29A2750D /* BridgeCore.swift */; };
@@ -36,8 +37,10 @@
 		A6CCB5E0C017B734CA9C1FDE /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 1EB5E9079F92D757277F3E04 /* Assets.xcassets */; };
 		B8CE4A23E2F905E37BF0714E /* LogicTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 48C878059E3F64428F09EB6A /* LogicTests.swift */; };
 		B9BFBBE427EAB2999AA02308 /* TodayView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7FCFD727FB07F24DE23DD631 /* TodayView.swift */; };
+		BC0FECAA1C6EB2A728010BF2 /* AccountClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = E84DCE44F38B7BCCB9AA5FDD /* AccountClient.swift */; };
 		C8734822F84893974BF3864E /* extension-snapshot.json in Resources */ = {isa = PBXBuildFile; fileRef = 7B4AF551EFA3B629B4660751 /* extension-snapshot.json */; };
 		CE0E52E5BF9290DA9D541B4A /* Snapshot.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4DF10DD89DCB9DE1EC9DE7EC /* Snapshot.swift */; };
+		DC2DC24F6190F9FFC8B21974 /* AccountClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = E84DCE44F38B7BCCB9AA5FDD /* AccountClient.swift */; };
 		DE644C3C74E489C99D66E684 /* NativeHost.swift in Sources */ = {isa = PBXBuildFile; fileRef = 35C74CD4B33CD555F9A4ECE5 /* NativeHost.swift */; };
 		E2B2677BCCE31A34E73C8B5D /* gatekeeper-bridge in Embed Dependencies */ = {isa = PBXBuildFile; fileRef = 9AA7DF378B0737E7FAEA218B /* gatekeeper-bridge */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		FD254DAF6FE3B54F0A96D28E /* NativeHost.swift in Sources */ = {isa = PBXBuildFile; fileRef = 35C74CD4B33CD555F9A4ECE5 /* NativeHost.swift */; };
@@ -91,7 +94,6 @@
 		1EB5E9079F92D757277F3E04 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		24AB34DE24119E0E29A2750D /* BridgeCore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BridgeCore.swift; sourceTree = "<group>"; };
 		287226FBF8DC40CFC5480EA3 /* GatekeeperTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = GatekeeperTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
-		2BBF83AB380686AB6F1DD87C /* Requests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Requests.swift; sourceTree = "<group>"; };
 		35C74CD4B33CD555F9A4ECE5 /* NativeHost.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NativeHost.swift; sourceTree = "<group>"; };
 		48C878059E3F64428F09EB6A /* LogicTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LogicTests.swift; sourceTree = "<group>"; };
 		4DF10DD89DCB9DE1EC9DE7EC /* Snapshot.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Snapshot.swift; sourceTree = "<group>"; };
@@ -105,12 +107,14 @@
 		800DDD4869C0461865FD0860 /* Theme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Theme.swift; sourceTree = "<group>"; };
 		9AA7DF378B0737E7FAEA218B /* gatekeeper-bridge */ = {isa = PBXFileReference; includeInIndex = 0; path = "gatekeeper-bridge"; sourceTree = BUILT_PRODUCTS_DIR; };
 		B01BB240D4EC123F00B5DED7 /* Safari.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = Safari.entitlements; sourceTree = "<group>"; };
+		BF971CA50215436ADD7F2E3C /* AccountStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccountStore.swift; sourceTree = "<group>"; };
 		C1709A5C113CDA3B9CD42A7D /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
 		C3082F88577B0E470AC078BD /* RingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RingView.swift; sourceTree = "<group>"; };
 		C4D39E6F7C7A7C931EB0D839 /* KeptAwayNotice.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeptAwayNotice.swift; sourceTree = "<group>"; };
 		CC2E2DD589B6E209EAAE9F95 /* GatekeeperApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GatekeeperApp.swift; sourceTree = "<group>"; };
 		D6502ABEF0F61DDC6F23AA07 /* extension-snapshot-sites.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = "extension-snapshot-sites.json"; sourceTree = "<group>"; };
 		DC9C71F808FC56FC5C7750B4 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
+		E84DCE44F38B7BCCB9AA5FDD /* AccountClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccountClient.swift; sourceTree = "<group>"; };
 		EA7D64C277B941713DE830EF /* Gatekeeper.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Gatekeeper.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		F5C519B06442447AC49CFCD8 /* main.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = main.swift; sourceTree = "<group>"; };
 		FBC653646B7E0A0B9CCB19E2 /* SafariWebExtensionHandler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SafariWebExtensionHandler.swift; sourceTree = "<group>"; };
@@ -206,12 +210,20 @@
 			path = Today;
 			sourceTree = "<group>";
 		};
+		BD0D097E917A8ABAC37B081F /* Account */ = {
+			isa = PBXGroup;
+			children = (
+				E84DCE44F38B7BCCB9AA5FDD /* AccountClient.swift */,
+				BF971CA50215436ADD7F2E3C /* AccountStore.swift */,
+			);
+			path = Account;
+			sourceTree = "<group>";
+		};
 		C1E8A141D3B854F60E93E2C7 /* Mac */ = {
 			isa = PBXGroup;
 			children = (
 				69682C2E07CCDA217A70EC27 /* Browsers.swift */,
 				015D785442DE072F00E8AD4F /* HostInstaller.swift */,
-				2BBF83AB380686AB6F1DD87C /* Requests.swift */,
 			);
 			path = Mac;
 			sourceTree = "<group>";
@@ -221,6 +233,7 @@
 			children = (
 				1EB5E9079F92D757277F3E04 /* Assets.xcassets */,
 				DC9C71F808FC56FC5C7750B4 /* Info.plist */,
+				BD0D097E917A8ABAC37B081F /* Account */,
 				86190890097C03E06D2CC837 /* App */,
 				2AE85B2655E96E87891EDC7F /* Exam */,
 				C1E8A141D3B854F60E93E2C7 /* Mac */,
@@ -413,6 +426,8 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				BC0FECAA1C6EB2A728010BF2 /* AccountClient.swift in Sources */,
+				7B72EA82373F07B754669076 /* AccountStore.swift in Sources */,
 				0D210FAF7CFD1883DB09A89A /* AppModel.swift in Sources */,
 				A2D403EACC866DFABB94441D /* BridgeCore.swift in Sources */,
 				566C80A1F807EE271927D9F8 /* Browsers.swift in Sources */,
@@ -422,7 +437,6 @@
 				530C55FA838A116D07D7FB39 /* HostInstaller.swift in Sources */,
 				1FEC3365C431C4C1435C7C06 /* KeptAwayNotice.swift in Sources */,
 				FD254DAF6FE3B54F0A96D28E /* NativeHost.swift in Sources */,
-				1D99503A2F3F17AD716F26D8 /* Requests.swift in Sources */,
 				453FBAB84B9D057F7539343C /* RingView.swift in Sources */,
 				342CC52DD896A494E829AAB7 /* SettingsView.swift in Sources */,
 				62F61B78566305E5E425361D /* Snapshot.swift in Sources */,
@@ -435,6 +449,8 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				DC2DC24F6190F9FFC8B21974 /* AccountClient.swift in Sources */,
+				219A3A0EC4BFAAF1FB37B7E4 /* AccountStore.swift in Sources */,
 				147B0931D3F5510E8C915DEE /* BridgeCore.swift in Sources */,
 				1B35B7585A0684D6CF205401 /* Browsers.swift in Sources */,
 				3AF441091C9556FB6C525CF3 /* ExamGuard.swift in Sources */,
@@ -558,7 +574,7 @@
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				MACOSX_DEPLOYMENT_TARGET = 14.0;
-				MARKETING_VERSION = 0.2.0;
+				MARKETING_VERSION = 0.3.0;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
 				ONLY_ACTIVE_ARCH = YES;
@@ -764,7 +780,7 @@
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				MACOSX_DEPLOYMENT_TARGET = 14.0;
-				MARKETING_VERSION = 0.2.0;
+				MARKETING_VERSION = 0.3.0;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
 				PRODUCT_NAME = "$(TARGET_NAME)";
