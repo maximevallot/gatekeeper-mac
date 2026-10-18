@@ -4,7 +4,7 @@ The Mac partner of the Gatekeeper extension (`~/gatekeeper-app`). A menu-bar app
 from the design canvas, and its exam mode hides or quits the apps an extension cannot reach (Mail, Outlook,
 Slack, WhatsApp, Messages, Discord) and every browser except the one running the extension.
 
-Version 0.1.0, 2026-10-17. Runs on macOS 14 or later. Signed "to run locally", so it needs no Apple
+Version 0.2.0, 2026-10-17. Runs on macOS 14 or later. Signed "to run locally", so it needs no Apple
 Developer account, not even a free Apple ID.
 
 ## Run it
@@ -78,14 +78,17 @@ is in front; Safari cannot tell when you step away, so they keep counting until 
 settings and says whether Gatekeeper is on there.
 
 To link Safari to the Mac app, turn on **Mac app** in Gatekeeper's Settings in Safari, as in Brave. In Safari the
-message goes straight to Gatekeeper.app, with nothing else to set up. Only one browser at a time should have
-Mac app on: the Mac shows whichever sent last.
+message goes straight to Gatekeeper.app, with nothing else to set up.
+
+**Safari has its own Gatekeeper rules**, separate from Brave's and Chrome's, until Gatekeeper has one account per
+person. The Mac follows **one** browser: the first that connected. If Brave already has Mac app on, Safari's
+switch says the Mac follows Brave; choose which one in the Mac app's Settings, under **Follows**.
 
 ## What it shows
 
 - Everything comes from the extension through Chrome native messaging ([docs/contract.md](docs/contract.md)):
-  the extension sends today to `gatekeeper-bridge`, a small tool inside the app, which saves it to
-  `~/Library/Application Support/Gatekeeper/today.json`. At every launch the app tells Brave and Chrome where
+  the extension sends today to `gatekeeper-bridge`, a small tool inside the app (in Safari, to the app itself),
+  which saves it in `~/Library/Application Support/Gatekeeper/snapshots/`. At every launch the app tells Brave and Chrome where
   the bridge is (a file named `com.gatekeeper.helper.json` in each one's `NativeMessagingHosts` folder).
 - The browser counts as connected while it has sent something in the last two minutes; it sends every minute.
 - The rings show exactly what the extension decided. When the day turns over and the browser has not sent the

@@ -52,7 +52,7 @@ struct RingView: View {
         case .examOnly:
             Text("exam only").font(Theme.font(11)).foregroundStyle(Theme.muted)
         case let .spent(reopens):
-            Text("till \(reopens.formatted(date: .omitted, time: .shortened))")
+            Text("till \(Day.until(reopens))")
                 .font(Theme.font(11, .semibold)).foregroundStyle(Theme.closed)
         case .closedAllDay:
             Text("all day").font(Theme.font(11, .semibold)).foregroundStyle(Theme.closed)
@@ -63,7 +63,7 @@ struct RingView: View {
         switch ring.state {
         case let .open(left, _): return "\(ring.name): \(left) minutes left"
         case .examOnly: return "\(ring.name): open, closed only in exam mode"
-        case let .spent(reopens): return "\(ring.name): closed until \(reopens.formatted(date: .omitted, time: .shortened))"
+        case let .spent(reopens): return "\(ring.name): closed until \(Day.until(reopens))"
         case .closedAllDay: return "\(ring.name): closed all day"
         }
     }

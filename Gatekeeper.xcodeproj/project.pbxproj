@@ -18,6 +18,7 @@
 		273ADF243AD0B8FB1F027FAB /* GatekeeperSafari.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 5C124771624657748CCA2DD2 /* GatekeeperSafari.appex */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		342CC52DD896A494E829AAB7 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1709A5C113CDA3B9CD42A7D /* SettingsView.swift */; };
 		35FDBCE80FDACEA4B906F4FA /* ExamGuard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 09DF7DDB644F1C3E338BCA2F /* ExamGuard.swift */; };
+		362C2E175B304EBACABAD2FE /* Snapshot.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4DF10DD89DCB9DE1EC9DE7EC /* Snapshot.swift */; };
 		3AF441091C9556FB6C525CF3 /* ExamGuard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 09DF7DDB644F1C3E338BCA2F /* ExamGuard.swift */; };
 		453FBAB84B9D057F7539343C /* RingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C3082F88577B0E470AC078BD /* RingView.swift */; };
 		45A37BA8710862D0FF77C6EA /* NativeHost.swift in Sources */ = {isa = PBXBuildFile; fileRef = 35C74CD4B33CD555F9A4ECE5 /* NativeHost.swift */; };
@@ -36,6 +37,7 @@
 		B8CE4A23E2F905E37BF0714E /* LogicTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 48C878059E3F64428F09EB6A /* LogicTests.swift */; };
 		B9BFBBE427EAB2999AA02308 /* TodayView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7FCFD727FB07F24DE23DD631 /* TodayView.swift */; };
 		C8734822F84893974BF3864E /* extension-snapshot.json in Resources */ = {isa = PBXBuildFile; fileRef = 7B4AF551EFA3B629B4660751 /* extension-snapshot.json */; };
+		CE0E52E5BF9290DA9D541B4A /* Snapshot.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4DF10DD89DCB9DE1EC9DE7EC /* Snapshot.swift */; };
 		DE644C3C74E489C99D66E684 /* NativeHost.swift in Sources */ = {isa = PBXBuildFile; fileRef = 35C74CD4B33CD555F9A4ECE5 /* NativeHost.swift */; };
 		E2B2677BCCE31A34E73C8B5D /* gatekeeper-bridge in Embed Dependencies */ = {isa = PBXBuildFile; fileRef = 9AA7DF378B0737E7FAEA218B /* gatekeeper-bridge */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		FD254DAF6FE3B54F0A96D28E /* NativeHost.swift in Sources */ = {isa = PBXBuildFile; fileRef = 35C74CD4B33CD555F9A4ECE5 /* NativeHost.swift */; };
@@ -449,6 +451,7 @@
 				97FA7A66E69EAA31A94E6EA5 /* BridgeCore.swift in Sources */,
 				DE644C3C74E489C99D66E684 /* NativeHost.swift in Sources */,
 				8DEBC85807E3C66948336CF6 /* SafariWebExtensionHandler.swift in Sources */,
+				362C2E175B304EBACABAD2FE /* Snapshot.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -458,6 +461,7 @@
 			files = (
 				85E5D3260BCEA239F1D3E75A /* BridgeCore.swift in Sources */,
 				5EF97F72FEB4FAA0EF34A812 /* NativeHost.swift in Sources */,
+				CE0E52E5BF9290DA9D541B4A /* Snapshot.swift in Sources */,
 				1C6A6F212C1D247736D7AB69 /* main.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -554,7 +558,7 @@
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				MACOSX_DEPLOYMENT_TARGET = 14.0;
-				MARKETING_VERSION = 0.1.0;
+				MARKETING_VERSION = 0.2.0;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
 				ONLY_ACTIVE_ARCH = YES;
@@ -760,7 +764,7 @@
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				MACOSX_DEPLOYMENT_TARGET = 14.0;
-				MARKETING_VERSION = 0.1.0;
+				MARKETING_VERSION = 0.2.0;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
 				PRODUCT_NAME = "$(TARGET_NAME)";

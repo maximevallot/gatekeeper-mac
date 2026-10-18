@@ -10,7 +10,7 @@ settings:
       SWIFT_ACTIVE_COMPILATION_CONDITIONS: DEBUG
   base:
     SWIFT_VERSION: "5.0"
-    MARKETING_VERSION: "0.1.0"
+    MARKETING_VERSION: "0.2.0"
     CURRENT_PROJECT_VERSION: "1"
 targets:
   Gatekeeper:
@@ -34,6 +34,8 @@ targets:
       path: Gatekeeper/Info.plist
       properties:
         CFBundleDisplayName: Gatekeeper
+        CFBundleShortVersionString: $(MARKETING_VERSION)
+        CFBundleVersion: $(CURRENT_PROJECT_VERSION)
         LSUIElement: true
         LSApplicationCategoryType: public.app-category.productivity
         # What Apple's Safari Web Extension template puts in the containing app.
@@ -58,7 +60,7 @@ targets:
     # that answers its native messages for the Mac link.
     type: app-extension
     platform: macOS
-    sources: [Safari, Shared]
+    sources: [Safari, Shared, Gatekeeper/Today/Snapshot.swift]
     preBuildScripts: []
     postCompileScripts:
       - name: Copy the web extension from ~/gatekeeper-app
@@ -68,6 +70,8 @@ targets:
       path: Safari/Info.plist
       properties:
         CFBundleDisplayName: Gatekeeper
+        CFBundleShortVersionString: $(MARKETING_VERSION)
+        CFBundleVersion: $(CURRENT_PROJECT_VERSION)
         NSExtension:
           NSExtensionPointIdentifier: com.apple.Safari.web-extension
           NSExtensionPrincipalClass: $(PRODUCT_MODULE_NAME).SafariWebExtensionHandler
@@ -94,7 +98,7 @@ targets:
   gatekeeper-bridge:
     type: tool
     platform: macOS
-    sources: [Bridge, Shared]
+    sources: [Bridge, Shared, Gatekeeper/Today/Snapshot.swift]
     settings:
       base:
         PRODUCT_NAME: gatekeeper-bridge

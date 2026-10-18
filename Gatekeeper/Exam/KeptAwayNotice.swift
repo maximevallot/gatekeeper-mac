@@ -16,7 +16,7 @@ final class KeptAwayNotice {
         if let last = lastShown[app], now.timeIntervalSince(last) < 20 { return }
         lastShown[app] = now
         log.notice("exam mode kept \(app, privacy: .public) away")
-        let text = "\(app) waits till \(until.formatted(date: .omitted, time: .shortened))"
+        let text = "\(app) waits till \(Day.until(until))"
         DispatchQueue.main.async { [weak self] in
             MainActor.assumeIsolated { self?.present(text) }
         }

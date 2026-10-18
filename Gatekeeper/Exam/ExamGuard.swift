@@ -71,6 +71,8 @@ final class ExamGuard {
     }
 
     func action(for bundleID: String) -> ExamAction? {
+        // The browser running the extension stays, even if it was put on the list (QA round 2, M6).
+        if bundleID == extensionBrowser { return nil }
         if let app = apps.first(where: { $0.bundleID == bundleID }) { return app.action }
         guard Browsers.known[bundleID] != nil else { return nil }
         if let mine = extensionBrowser {

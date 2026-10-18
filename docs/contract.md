@@ -17,7 +17,7 @@ mode), a request that the extension's engine applies; anything looser is done in
 
 ```
 extension (Brave or Chrome)                     Mac
-  background.js ──sendNativeMessage──▶ gatekeeper-bridge ──writes──▶ today.json ──read by──▶ Gatekeeper.app
+  background.js ──sendNativeMessage──▶ gatekeeper-bridge ──writes──▶ snapshots/<browser>.json ──read by──▶ Gatekeeper.app
               ◀── reply: requests ───            ◀──reads, deletes── requests/*.json ◀──writes──
 ```
 
@@ -33,8 +33,23 @@ extension (Brave or Chrome)                     Mac
    (`chrome.alarms`). Each send starts the bridge for a few milliseconds. The bridge's reply carries any
    requests the Mac queued, so a request from the Mac takes effect in the extension within a minute; the Mac
    enforces its own side at once and does not wait.
-4. Files live in `~/Library/Application Support/Gatekeeper/`: the bridge replaces `today.json` atomically;
-   the app writes one file per request in `requests/`; the bridge hands each over once and deletes it.
+4. Files live in `~/Library/Application Support/Gatekeeper/` of the real home folder (the sandboxed Safari
+   extension builds it from the user's record, not from its sandbox): the bridge replaces
+   `snapshots/<browser>.json` atomically, where `<browser>` is the caller's bundle ID; `linked.json` names the
+   browser the Mac follows; the app writes one file per request in `requests/`; the bridge hands each over once,
+   to the followed browser only, and deletes it.
+
+### Two browsers
+
+Until Gatekeeper has one account per person with the Mac as the hub, the Mac follows **one** browser
+(QA round 2, C2 and H1):
+- The first browser whose snapshot the bridge can read becomes the followed one (`linked.json`, created
+  atomically). Settings in the Mac app can switch to another browser that has connected.
+- A snapshot from any other browser is kept in its own file but changes nothing on the Mac, and that browser is
+  answered `{ ok: false, error: "other_browser_linked", linked, linkedName }`, so its Mac app switch can say
+  "Gatekeeper for Mac follows Safari". It is handed no request.
+- Each browser keeps its own rules (Safari's copy of the extension has its own storage); the Mac shows the
+  followed one's.
 
 ### In Safari
 
@@ -101,8 +116,8 @@ The engine's `todaySummary(state, now)`, plus who sent it, the pages, and exam m
   so passes, video-rule buckets and the clock floor stay the engine's business. Other fields of
   `todaySummary` may be sent; the Mac ignores what it does not know.
 - `pages` are paths inside the extension; the app opens `chrome-extension://<extensionId>/<path>` in
-  `browser`: "Change something" opens `talk`, "All rules" `rules`, "Your week" `week`, and "End exam mode
-  early" `exam`. A missing page falls back to `rules`.
+  `browser`: "Change something" and "End exam mode early" open `talk`, "All rules" `rules`, "Your week" `week`
+  . A missing page falls back to `rules`. (`exam` is no longer used by the Mac.)
 - `sites` (optional) lists the sites with a daily limit of their own, after the kinds, in the same shape with
   `kind` "s:<domain>" and `site`. `minutes` and `left` are null for a site closed only in exam mode
   (`examOnly: true`, status "open" outside exam mode); the Mac shows that ring as "exam only".
@@ -131,7 +146,11 @@ The engine's `todaySummary(state, now)`, plus who sent it, the pages, and exam m
   tab), where the agent decides. The Mac never ends anything, not even with a typed sentence.
 - Each request is handed over once. If the next snapshots do not show an `exam.start` within two minutes of
   handing it over, the Mac queues it again.
-- Errors: `{ "ok": false, "error": "bad_origin" | "bad_message" | "unknown_version" | "write_failed" }`. The
+- Every reply carries `mac: { version, reads: [1] }`, the Mac app's version and the contract versions it
+  reads, so an extension can say "Update Gatekeeper for Mac" rather than "isn't answering".
+- Errors: `{ "ok": false, "error": "bad_origin" | "bad_message" | "unknown_version" | "write_failed" |
+  "other_browser_linked" }`. `bad_message` carries `reason`: the bridge decodes the snapshot with the app's own
+  type before accepting it, so a snapshot the Mac can't read is refused rather than answered "ok". The
   extension ignores them and tries again at the next change.
 
 ### What stays on the Mac
@@ -139,13 +158,24 @@ The engine's `todaySummary(state, now)`, plus who sent it, the pages, and exam m
 The list of apps exam mode hides or quits, and what happens to other browsers. They are Mac settings, changed
 only on the Mac. While exam mode is on, the Mac lets an app be added to the list but not removed.
 
+### What the Mac requires
+
+`v` (1), `at` and `reopensAt` (milliseconds, numbers; an ISO 8601 time is also read) and `kinds` (an array).
+Each row needs `kind`, `label` and `status`. Everything else is optional; a field of the wrong type counts as
+missing, a row that can't be read is skipped rather than the whole day, and a decimal where an integer belongs is
+rounded. `exam.until` may be milliseconds or an ISO 8601 time with its offset.
+
 ### What the Mac does with the snapshot
 
 - A ring per kind, from `status`: "open" shows `left` and `fraction`, "spent" a lock and "till" `reopensAt`,
   "closed" a lock and "all day".
 - Once its clock passes `reopensAt` with no newer snapshot, the Mac shows "Waiting for the browser" instead of
   rings. It never reopens anything on its own clock (QA finding H2).
-- Exam mode is on while the snapshot says so. A Mac-started exam mode is enforced on the Mac at once and
+- Exam mode is held: on while the followed browser says so, and the Mac keeps it, saved across relaunches, until its
+  `until` or until a snapshot from the same browser with a later `at` says it is off. An older snapshot, or one
+  from another browser, changes nothing. While exam mode is on and Gatekeeper is not running (force-quit), the
+  Chrome/Brave bridge reopens it at the next call, at most a minute later.
+- A Mac-started exam mode is enforced on the Mac at once and
   handed to the extension; once a snapshot shows it, the extension's is the one in force.
 - The browser counts as connected while its last message is under two minutes old (it sends one a minute).
   Without it the Mac shows "Connect Gatekeeper in your browser", with one step and a button that opens the
@@ -158,5 +188,5 @@ only on the Mac. While exam mode is on, the Mac lets an app be added to the list
 ### Done on the extension's side
 
 The items the review listed (exam mode in the engine, the optional `nativeMessaging` permission behind a "Mac
-app" switch, the listing and claims rows, the privacy and consent line for `today.json`, calls from change
+app" switch, the listing and claims rows, the privacy and consent line for the snapshot file, calls from change
 detection) are built on `~/gatekeeper-app` main for 0.2.0.

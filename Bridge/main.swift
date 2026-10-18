@@ -49,8 +49,24 @@ func callerBrowser() -> String? {
     return nil
 }
 
-guard let caller = callerID() else { reply(["ok": false, "error": "bad_origin"]) }
+/// Gatekeeper.app, two folders up from this tool (Contents/MacOS/gatekeeper-bridge).
+let appURL = URL(fileURLWithPath: CommandLine.arguments[0]).resolvingSymlinksInPath()
+    .deletingLastPathComponent().deletingLastPathComponent().deletingLastPathComponent()
+let appVersion = Bundle(url: appURL)?.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String
+
+guard let caller = callerID() else { reply(["ok": false, "error": "bad_origin", "mac": BridgeCore.macInfo(appVersion: appVersion)]) }
 guard let data = readMessage(), let message = try? JSONSerialization.jsonObject(with: data) else {
-    reply(["ok": false, "error": "bad_message"])
+    reply(["ok": false, "error": "bad_message", "mac": BridgeCore.macInfo(appVersion: appVersion)])
 }
-reply(BridgeCore.handle(message, callerID: caller, browser: callerBrowser()))
+let result = BridgeCore.handle(message, callerID: caller, browser: callerBrowser(), appVersion: appVersion)
+// Exam mode is on and Gatekeeper is not running (force-quit, or not yet opened): open it, so the Mac keeps
+// enforcing (QA round 2, H3). The browser calls every minute.
+if result.examUntil != nil,
+   NSRunningApplication.runningApplications(withBundleIdentifier: NativeHost.appBundleID).isEmpty {
+    let config = NSWorkspace.OpenConfiguration()
+    config.activates = false
+    let done = DispatchSemaphore(value: 0)
+    NSWorkspace.shared.openApplication(at: appURL, configuration: config) { _, _ in done.signal() }
+    _ = done.wait(timeout: .now() + 2)
+}
+reply(result.reply)

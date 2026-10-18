@@ -5,14 +5,27 @@ import UniformTypeIdentifiers
 /// The one settings screen. It opens by itself on the first launch.
 struct SettingsView: View {
     @EnvironmentObject var model: AppModel
-    @State private var safariOn: Bool?
+    /// nil: not asked yet; .unknown: Safari doesn't list the extension (QA round 2, M5).
+    @State private var safariOn: SafariState?
+
+    enum SafariState { case on, off, unknown }
 
     private var safariState: String {
         switch safariOn {
-        case true?: return "Gatekeeper is on in Safari"
-        case false?: return "Gatekeeper is off in Safari"
+        case .on?: return "Gatekeeper is on in Safari"
+        case .off?: return "Gatekeeper is off in Safari"
+        case .unknown?: return "Safari doesn't see Gatekeeper yet"
         case nil: return "Gatekeeper for Safari"
         }
+    }
+
+    /// Safari's copy keeps rules of its own until Gatekeeper has one account per person (QA round 2, H4).
+    private var safariNote: String {
+        let rules = "Safari has its own Gatekeeper rules, separate from Brave's and Chrome's."
+        if safariOn == .unknown {
+            return "In Safari: Settings › Developer › Allow unsigned extensions, then Extensions. It turns off each time Safari quits. " + rules
+        }
+        return rules
     }
 
     var body: some View {
@@ -36,6 +49,19 @@ struct SettingsView: View {
                 }
             }
 
+            if !model.seenBrowsers.isEmpty {
+                section("Follows") {
+                    Picker("", selection: Binding(get: { model.linkedBrowser ?? "" }, set: { model.follow($0) })) {
+                        ForEach(model.seenBrowsers, id: \.self) { Text(NativeHost.browserName($0)).tag($0) }
+                    }
+                    .labelsHidden()
+                    .frame(width: 200, alignment: .leading)
+                    Text("The Mac shows and enforces what this browser's Gatekeeper decides. Another browser with Mac app on is not followed.")
+                        .font(Theme.font(12)).foregroundStyle(Theme.muted)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+            }
+
             section("Safari") {
                 HStack {
                     Text(safariState).font(Theme.font(14))
@@ -44,6 +70,9 @@ struct SettingsView: View {
                         SFSafariApplication.showPreferencesForExtension(withIdentifier: Browsers.safariExtensionID)
                     }
                 }
+                Text(safariNote)
+                    .font(Theme.font(12)).foregroundStyle(Theme.muted)
+                    .fixedSize(horizontal: false, vertical: true)
             }
 
             section("Appearance") {
@@ -92,8 +121,8 @@ struct SettingsView: View {
         .onAppear {
             model.refreshLoginItem()
             SFSafariExtensionManager.getStateOfSafariExtension(withIdentifier: Browsers.safariExtensionID) { state, _ in
-                let on = state?.isEnabled ?? false
-                DispatchQueue.main.async { safariOn = on }
+                let value: SafariState = state.map { $0.isEnabled ? .on : .off } ?? .unknown
+                DispatchQueue.main.async { safariOn = value }
             }
         }
     }

@@ -112,8 +112,8 @@ final class ExamGuardTests: XCTestCase {
 final class FollowTests: XCTestCase {
     let now = Date(timeIntervalSince1970: 1_792_250_000)
 
-    func snapshot(examUntil: Date?) -> Snapshot {
-        Snapshot(v: 1, at: 0, browser: nil, extensionId: nil, pages: nil, goal: nil, reopensAt: 1_792_310_400_000,
+    func snapshot(examUntil: Date?, at: Double = 0) -> Snapshot {
+        Snapshot(v: 1, at: at, browser: nil, extensionId: nil, pages: nil, goal: nil, reopensAt: 1_792_310_400_000,
                  waiting: nil, kinds: [], sites: nil, exam: examUntil.map { .init(until: $0.timeIntervalSince1970 * 1000, goal: nil) },
                  watch: nil)
     }
@@ -126,13 +126,21 @@ final class FollowTests: XCTestCase {
 
     func testTheBrowsersExamModeRunsToItsEndEvenWithTheBrowserClosed() {
         let end = now.addingTimeInterval(3600)
-        XCTAssertEqual(Follow.enforcedExam(snapshot(examUntil: end), pendingUntil: nil, now: now), end)
-        XCTAssertNil(Follow.enforcedExam(snapshot(examUntil: end), pendingUntil: nil, now: end.addingTimeInterval(1)))
+        let held = Follow.hold(nil, seeing: snapshot(examUntil: end, at: 1000))
+        XCTAssertEqual(Follow.enforcedExam(held, pendingUntil: nil, now: now), end)
+        XCTAssertNil(Follow.enforcedExam(held, pendingUntil: nil, now: end.addingTimeInterval(1)))
+    }
+
+    func testOnlyANewerSnapshotEndsExamMode() {
+        let end = now.addingTimeInterval(3600)
+        let held = Follow.hold(nil, seeing: snapshot(examUntil: end, at: 2000))
+        XCTAssertEqual(Follow.hold(held, seeing: snapshot(examUntil: nil, at: 1000)), held, "an older snapshot changes nothing")
+        XCTAssertNil(Follow.hold(held, seeing: snapshot(examUntil: nil, at: 3000)), "a newer one from the followed browser ends it")
     }
 
     func testNoBrowserNoExamMode() {
         XCTAssertNil(Follow.enforcedExam(nil, pendingUntil: nil, now: now))
-        XCTAssertNil(Follow.enforcedExam(snapshot(examUntil: nil), pendingUntil: nil, now: now))
+        XCTAssertNil(Follow.hold(nil, seeing: snapshot(examUntil: nil, at: 1)))
     }
 
     func testAStartAskedOnTheMacIsEnforcedUntilTheBrowserDecides() {
@@ -154,12 +162,98 @@ final class FollowTests: XCTestCase {
 /// The exchange both the Chrome/Brave bridge and the Safari handler use; only the answers that write nothing.
 final class BridgeCoreTests: XCTestCase {
     func testRefusesWhatIsNotASnapshot() {
-        XCTAssertEqual(BridgeCore.handle(["type": "hello"], callerID: nil, browser: nil)["error"] as? String, "bad_message")
-        XCTAssertEqual(BridgeCore.handle(nil, callerID: nil, browser: nil)["error"] as? String, "bad_message")
+        XCTAssertEqual(BridgeCore.handle(["type": "hello"], callerID: nil, browser: nil, appVersion: nil).reply["error"] as? String, "bad_message")
+        XCTAssertEqual(BridgeCore.handle(nil, callerID: nil, browser: nil, appVersion: nil).reply["error"] as? String, "bad_message")
     }
 
     func testRefusesAnotherVersion() {
-        let reply = BridgeCore.handle(["type": "snapshot", "v": 2], callerID: nil, browser: "com.apple.Safari")
+        let reply = BridgeCore.handle(["type": "snapshot", "v": 2], callerID: nil, browser: "com.apple.Safari", appVersion: nil).reply
         XCTAssertEqual(reply["error"] as? String, "unknown_version")
+    }
+}
+
+/// Reading what the extension sends: strict about v, at, reopensAt and kinds, lenient about the rest (QA round 2, H2).
+final class LenientDecodingTests: XCTestCase {
+    func decode(_ json: String) throws -> Snapshot { try JSONDecoder().decode(Snapshot.self, from: Data(json.utf8)) }
+
+    func testABadRowIsSkippedNotTheWholeDay() throws {
+        let s = try decode(#"{"v":1,"at":1,"reopensAt":2,"kinds":[{"kind":"social","label":"Social","status":"open","minutes":7.5,"left":3},{"nope":true}]}"#)
+        XCTAssertEqual(s.kinds.count, 1)
+        XCTAssertEqual(s.kinds[0].minutes, 8)
+    }
+
+    func testExamUntilAsAnISOTime() throws {
+        let s = try decode(#"{"v":1,"at":1,"reopensAt":2,"kinds":[],"exam":{"until":"2026-10-17T23:00:00-04:00"}}"#)
+        XCTAssertEqual(s.exam?.until, 1_792_292_400_000)
+    }
+
+    func testAFieldOfTheWrongTypeCountsAsMissing() throws {
+        let s = try decode(#"{"v":1,"at":1,"reopensAt":2,"kinds":[],"goal":42,"pages":"x","sites":{"a":1}}"#)
+        XCTAssertNil(s.goal)
+        XCTAssertNil(s.pages)
+        XCTAssertNil(s.sites)
+    }
+
+    func testTheFieldsTheMacNeedsAreRequired() {
+        XCTAssertThrowsError(try decode(#"{"v":1,"at":1,"kinds":[]}"#), "no reopensAt")
+        XCTAssertThrowsError(try decode(#"{"v":1,"at":1,"reopensAt":null,"kinds":[]}"#))
+        XCTAssertThrowsError(try decode(#"{"v":1,"at":1,"reopensAt":2,"kinds":{}}"#), "kinds as an object")
+    }
+}
+
+/// The bridge's exchange with two browsers, in a scratch folder (QA round 2, C1, C2, H1, L10).
+final class BridgeExchangeTests: XCTestCase {
+    var dir: URL!
+
+    override func setUp() {
+        dir = FileManager.default.temporaryDirectory.appendingPathComponent("gk-bridge-\(UUID().uuidString)")
+        setenv("GATEKEEPER_FOLDER", dir.path, 1)
+    }
+
+    override func tearDown() {
+        unsetenv("GATEKEEPER_FOLDER")
+        try? FileManager.default.removeItem(at: dir)
+    }
+
+    func snap(_ at: Double, exam: Double? = nil) -> [String: Any] {
+        var s: [String: Any] = ["type": "snapshot", "v": 1, "at": at, "reopensAt": 9e12, "kinds": []]
+        if let exam { s["exam"] = ["until": exam] }
+        return s
+    }
+
+    func testTheFirstBrowserIsFollowedAndTheOtherIsTurnedAway() throws {
+        try FileManager.default.createDirectory(at: NativeHost.requestsFolder, withIntermediateDirectories: true)
+        try Data(#"{"id":"r1","type":"exam.start","until":9e12}"#.utf8).write(to: NativeHost.requestsFolder.appendingPathComponent("1-r1.json"))
+
+        let safari = BridgeCore.handle(snap(1), callerID: nil, browser: "com.apple.Safari", appVersion: "0.2.0")
+        XCTAssertEqual(safari.reply["ok"] as? Bool, true)
+        XCTAssertEqual((safari.reply["requests"] as? [[String: Any]])?.count, 1)
+        XCTAssertEqual(NativeHost.linked(), "com.apple.Safari")
+
+        try Data(#"{"id":"r2","type":"exam.start","until":9e12}"#.utf8).write(to: NativeHost.requestsFolder.appendingPathComponent("2-r2.json"))
+        let brave = BridgeCore.handle(snap(2, exam: 9e12), callerID: "kfikbbdocggfgfhaegkgkfomhmacdbjp", browser: "com.brave.Browser", appVersion: "0.2.0")
+        XCTAssertEqual(brave.reply["error"] as? String, "other_browser_linked")
+        XCTAssertEqual(brave.reply["linkedName"] as? String, "Safari")
+        XCTAssertNil(brave.reply["requests"], "another browser is handed no request")
+        XCTAssertNil(brave.examUntil)
+        XCTAssertTrue(FileManager.default.fileExists(atPath: NativeHost.snapshotFile("com.brave.Browser").path), "its snapshot is kept apart")
+        XCTAssertEqual((try FileManager.default.contentsOfDirectory(atPath: NativeHost.requestsFolder.path)).count, 1, "the request waits for Safari")
+        XCTAssertEqual((brave.reply["mac"] as? [String: Any])?["version"] as? String, "0.2.0")
+    }
+
+    func testASnapshotTheMacCannotReadIsRefusedWithTheReason() {
+        var bad = snap(1)
+        bad["reopensAt"] = NSNull()
+        let r = BridgeCore.handle(bad, callerID: nil, browser: "com.apple.Safari", appVersion: nil)
+        XCTAssertEqual(r.reply["error"] as? String, "bad_message")
+        XCTAssertNotNil(r.reply["reason"])
+        XCTAssertNil(NativeHost.linked(), "a refused browser does not become the followed one")
+    }
+
+    func testTheFolderIsInTheRealHomeNotASandbox() {
+        unsetenv("GATEKEEPER_FOLDER")
+        XCTAssertFalse(NativeHost.folder.path.contains("/Library/Containers/"))
+        XCTAssertTrue(NativeHost.folder.path.hasSuffix("Library/Application Support/Gatekeeper"))
+        setenv("GATEKEEPER_FOLDER", dir.path, 1)
     }
 }

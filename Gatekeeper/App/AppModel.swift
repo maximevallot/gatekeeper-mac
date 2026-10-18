@@ -12,8 +12,16 @@ import os
 /// running here until its end, because that is the engine's decision, not the Mac's.
 @MainActor
 final class AppModel: ObservableObject {
-    /// The last snapshot the browser sent (contract version 1); nil until it has sent one.
+    /// The last snapshot the followed browser sent (contract version 1); nil until it has sent one.
     @Published private(set) var snapshot: Snapshot?
+    /// The browser the Mac follows (linked.json): the first to connect, or the one picked in Settings.
+    @Published private(set) var linkedBrowser: String?
+    /// Every browser that has sent a snapshot, newest first, for Settings.
+    @Published private(set) var seenBrowsers: [String] = []
+    /// Exam mode as the followed browser last said, kept until its end across relaunches (QA round 2, H3).
+    @Published private(set) var heldExam: Follow.HeldExam? {
+        didSet { save(heldExam, Keys.heldExam) }
+    }
     /// The browser answered in the last two minutes.
     @Published private(set) var connected = false
     /// The clock the screens show, moved once a minute so the menu bar is not redrawn every two seconds.
@@ -53,6 +61,8 @@ final class AppModel: ObservableObject {
     private let notice = KeptAwayNotice()
     private var timer: Timer?
     private var snapshotDate: Date?
+    /// When the followed browser last sent a snapshot the Mac could read.
+    var lastHeard: Date? { snapshotDate }
     private let log = Logger(subsystem: "com.gatekeeper.mac", category: "follow")
 
     private enum Keys {
@@ -61,6 +71,7 @@ final class AppModel: ObservableObject {
         static let firstRunDone = "firstRunDone"
         static let appearance = "appearance"
         static let oldExamUntil = "examUntil" // the Mac's own exam mode, before 2026-10-17; removed at launch
+        static let heldExam = "heldExam"
     }
 
     init() {
@@ -69,6 +80,8 @@ final class AppModel: ObservableObject {
         appearance = Appearance(rawValue: defaults.string(forKey: Keys.appearance) ?? "") ?? .light
         appearance.apply()
         defaults.removeObject(forKey: Keys.oldExamUntil)
+        heldExam = Self.load(Follow.HeldExam.self, Keys.heldExam)
+        try? FileManager.default.removeItem(at: NativeHost.oldTodayFile)
 
         if let found = Browsers.findExtension() {
             extensionBrowser = found.bundleID
@@ -136,18 +149,40 @@ final class AppModel: ObservableObject {
         guardian.sweep()
     }
 
+    /// Reads the followed browser's snapshot when its file changed. Only a snapshot the Mac can read, and no older
+    /// than the last one, counts; a file it cannot read does not count as the browser speaking (QA round 2, H2).
     private func reloadSnapshot() {
-        let url = NativeHost.todayFile
-        guard let modified = (try? FileManager.default.attributesOfItem(atPath: url.path))?[.modificationDate] as? Date
+        let linked = NativeHost.linked()
+        if linked != linkedBrowser {
+            linkedBrowser = linked
+            snapshot = nil
+            snapshotDate = nil
+            if let b = linked, Browsers.known[b] != nil { extensionBrowser = b }
+            applyGuardSettings()
+        }
+        let seen = NativeHost.seenBrowsers().map(\.key)
+        if seen != seenBrowsers { seenBrowsers = seen }
+        guard let key = linked else { return }
+        let url = NativeHost.snapshotFile(key)
+        guard let modified = (try? FileManager.default.attributesOfItem(atPath: url.path))?[.modificationDate] as? Date,
+              modified != snapshotDate,
+              let data = try? Data(contentsOf: url),
+              let s = try? JSONDecoder().decode(Snapshot.self, from: data), s.v == 1,
+              s.at >= (snapshot?.at ?? 0)
         else { return }
-        guard modified != snapshotDate else { return }
         snapshotDate = modified
-        guard let data = try? Data(contentsOf: url), let s = try? JSONDecoder().decode(Snapshot.self, from: data),
-              s.v == 1 else { return }
         snapshot = s
+        let held = Follow.hold(heldExam, seeing: s)
+        if held != heldExam { heldExam = held }
         if let b = s.browser, Browsers.known[b] != nil { extensionBrowser = b }
         if let id = s.extensionId { extensionID = id }
         applyGuardSettings()
+    }
+
+    /// Settings: follow another browser that has connected. Exam mode the Mac holds keeps running to its end.
+    func follow(_ key: String) {
+        NativeHost.setLinked(key)
+        update()
     }
 
     private func applyGuardSettings() {
@@ -203,10 +238,10 @@ final class AppModel: ObservableObject {
     // MARK: Exam mode
 
     /// Exam mode as the browser's engine last said, even if the browser has since closed: it runs to its end.
-    var confirmedExamUntil: Date? { Follow.confirmedExam(snapshot, now: Date()) }
+    var confirmedExamUntil: Date? { Follow.confirmedExam(heldExam, now: Date()) }
 
     /// What the Mac enforces: the engine's exam mode, or a start the browser is confirming.
-    var examUntil: Date? { Follow.enforcedExam(snapshot, pendingUntil: pendingStart?.until, now: Date()) }
+    var examUntil: Date? { Follow.enforcedExam(heldExam, pendingUntil: pendingStart?.until, now: Date()) }
 
     var examOn: Bool { examUntil != nil }
 
@@ -258,7 +293,8 @@ final class AppModel: ObservableObject {
 
     func add(appAt url: URL) {
         guard let bundle = Bundle(url: url), let id = bundle.bundleIdentifier,
-              !examApps.contains(where: { $0.bundleID == id }) else { return }
+              !examApps.contains(where: { $0.bundleID == id }),
+              id != extensionBrowser, id != NativeHost.appBundleID else { return }
         let name = FileManager.default.displayName(atPath: url.path).replacingOccurrences(of: ".app", with: "")
         examApps.append(ExamApp(bundleID: id, name: name, action: .hide))
     }

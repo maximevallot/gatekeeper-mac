@@ -44,12 +44,17 @@ struct ConnectView: View {
                 .font(Theme.font(15, .medium))
                 .fixedSize(horizontal: false, vertical: true)
 
-            if model.canOpenExtension {
+            if let heard = model.lastHeard {
+                // Connected before: the switch is already on; the browser is closed or asleep (QA round 2, M4).
+                Text("\(model.browserName) hasn't sent anything since \(Day.until(heard)). Open it to see today.")
+                    .font(Theme.font(13)).foregroundStyle(Theme.muted)
+                    .fixedSize(horizontal: false, vertical: true)
+            } else if model.canOpenExtension {
                 Text("In \(model.browserName), open Gatekeeper's Settings and turn on Mac app.")
                     .font(Theme.font(13)).foregroundStyle(Theme.muted)
                     .fixedSize(horizontal: false, vertical: true)
             } else {
-                Text("Add the Gatekeeper extension to Brave or Chrome first.")
+                Text("Add the Gatekeeper extension to Brave, Chrome or Safari first.")
                     .font(Theme.font(13)).foregroundStyle(Theme.muted)
                     .fixedSize(horizontal: false, vertical: true)
             }
@@ -57,7 +62,7 @@ struct ConnectView: View {
             if let until = model.examUntil {
                 HStack(spacing: 12) {
                     Image(systemName: "lock.fill").font(.system(size: 15, weight: .semibold)).foregroundStyle(Theme.accent)
-                    Text("Exam mode runs till \(until.formatted(date: .omitted, time: .shortened)). Apps stay hidden.")
+                    Text("Exam mode runs till \(Day.until(until)). Apps stay hidden.")
                         .font(Theme.font(14, .medium)).fixedSize(horizontal: false, vertical: true)
                     Spacer(minLength: 0)
                 }
@@ -196,7 +201,7 @@ struct ModeChip: View {
             switch state {
             case let .exam(until):
                 Image(systemName: "lock.fill").font(.system(size: 10, weight: .bold))
-                Text("Exam till \(until.formatted(date: .omitted, time: .shortened))")
+                Text("Exam till \(Day.until(until))")
             case .starting:
                 Image(systemName: "lock.fill").font(.system(size: 10, weight: .bold))
                 Text("Starting exam…")

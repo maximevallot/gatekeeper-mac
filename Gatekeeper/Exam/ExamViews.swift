@@ -12,7 +12,8 @@ struct StartExamView: View {
 
             VStack(alignment: .leading, spacing: 10) {
                 Text("Until").font(Theme.font(13, .semibold)).foregroundStyle(Theme.muted)
-                DatePicker("Until", selection: $until, in: Date()..., displayedComponents: [.date, .hourAndMinute])
+                DatePicker("Until", selection: $until, in: Date()...Date().addingTimeInterval(14 * 86400),
+                           displayedComponents: [.date, .hourAndMinute])
                     .labelsHidden()
                     .datePickerStyle(.field)
                 HStack(spacing: 8) {
