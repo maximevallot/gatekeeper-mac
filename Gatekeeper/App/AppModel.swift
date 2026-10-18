@@ -172,7 +172,7 @@ final class AppModel: ObservableObject {
         else { return }
         snapshotDate = modified
         snapshot = s
-        let held = Follow.hold(heldExam, seeing: s)
+        let held = Follow.hold(heldExam, seeing: s, from: key)
         if held != heldExam { heldExam = held }
         if let b = s.browser, Browsers.known[b] != nil { extensionBrowser = b }
         if let id = s.extensionId { extensionID = id }
