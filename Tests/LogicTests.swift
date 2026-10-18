@@ -138,6 +138,25 @@ final class FollowTests: XCTestCase {
         XCTAssertNil(Follow.hold(held, seeing: snapshot(examUntil: nil, at: 3000)), "a newer one from the followed browser ends it")
     }
 
+    func testSwitchingFollowsDuringExamModeDoesNotEndIt() {
+        let end = now.addingTimeInterval(3600)
+        let held = Follow.hold(nil, seeing: snapshot(examUntil: end, at: 2000), from: "com.brave.Browser", now: now)
+        // Settings now follows Safari, whose Gatekeeper has no exam mode and a later clock.
+        let afterSwitch = Follow.hold(held, seeing: snapshot(examUntil: nil, at: 9_000_000), from: "com.apple.Safari", now: now)
+        XCTAssertEqual(afterSwitch, held, "another browser cannot end it")
+        XCTAssertEqual(Follow.enforcedExam(afterSwitch, pendingUntil: nil, now: now), end)
+        // A shorter exam mode from the other browser does not shorten it either; a longer one extends it.
+        let shorter = Follow.hold(held, seeing: snapshot(examUntil: now.addingTimeInterval(60), at: 9_000_001), from: "com.apple.Safari", now: now)
+        XCTAssertEqual(shorter, held)
+        let later = now.addingTimeInterval(7200)
+        let longer = Follow.hold(held, seeing: snapshot(examUntil: later, at: 9_000_002), from: "com.apple.Safari", now: now)
+        XCTAssertEqual(Follow.enforcedExam(longer, pendingUntil: nil, now: now), later)
+        // The browser that started it can still end it with a newer snapshot.
+        XCTAssertNil(Follow.hold(held, seeing: snapshot(examUntil: nil, at: 3000), from: "com.brave.Browser", now: now))
+        // Once it has run out, the other browser's word counts again.
+        XCTAssertNil(Follow.hold(held, seeing: snapshot(examUntil: nil, at: 9_000_000), from: "com.apple.Safari", now: end.addingTimeInterval(1)))
+    }
+
     func testNoBrowserNoExamMode() {
         XCTAssertNil(Follow.enforcedExam(nil, pendingUntil: nil, now: now))
         XCTAssertNil(Follow.hold(nil, seeing: snapshot(examUntil: nil, at: 1)))

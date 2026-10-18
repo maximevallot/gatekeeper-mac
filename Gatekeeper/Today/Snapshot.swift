@@ -218,11 +218,20 @@ enum Follow {
     struct HeldExam: Codable, Equatable {
         var until: Double // ms
         var seenAt: Double // the `at` of the snapshot that said so
+        /// The browser whose snapshot said so (its key); nil for one saved before QA round 3.
+        var source: String?
     }
 
-    static func hold(_ held: HeldExam?, seeing s: Snapshot) -> HeldExam? {
+    /// `source` is the browser the snapshot came from. While a held exam mode is running, a snapshot from another
+    /// browser can only make it longer, never end or shorten it: switching Follows in Settings during exam mode must
+    /// not end it (QA round 3, N1). Only a newer snapshot from the browser that started it, or its end, ends it.
+    static func hold(_ held: HeldExam?, seeing s: Snapshot, from source: String? = nil, now: Date = Date()) -> HeldExam? {
+        if let held, let started = held.source, started != source, held.until > now.timeIntervalSince1970 * 1000 {
+            if let exam = s.exam, exam.until > held.until { return HeldExam(until: exam.until, seenAt: s.at, source: source) }
+            return held
+        }
         if let held, s.at < held.seenAt { return held }
-        return s.exam.map { HeldExam(until: $0.until, seenAt: s.at) }
+        return s.exam.map { HeldExam(until: $0.until, seenAt: s.at, source: source) }
     }
 
     static func confirmedExam(_ held: HeldExam?, now: Date) -> Date? {
