@@ -48,6 +48,10 @@ Apps hide at once; the chip says "Starting exam…" until your Gatekeeper confir
 browser in the account goes into exam mode at its next sync. **End exam mode early…** opens the chat in your
 browser, where the agent decides; the Mac never ends it.
 
+The account flow is tested end to end against the relay's account under `wrangler dev`: start it with
+`npm run dev:account` in ~/gatekeeper-relay-0.3, then run
+`TEST_RUNNER_GATEKEEPER_RELAY_IT=http://127.0.0.1:8787 xcodebuild -project Gatekeeper.xcodeproj -scheme Gatekeeper test`.
+
 To test against a relay running on this Mac (`wrangler dev`), start the app with `GATEKEEPER_RELAY=http://127.0.0.1:8787`
 in the scheme's environment (Product › Scheme › Edit Scheme › Run › Arguments).
 

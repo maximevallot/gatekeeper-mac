@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		060E0B6D7A0C7C61C8CDD07A /* Theme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 800DDD4869C0461865FD0860 /* Theme.swift */; };
+		0853E6D083CB0B215B72D6BB /* AccountIntegrationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F68DF3A04CD8115AFF3ADCC0 /* AccountIntegrationTests.swift */; };
 		0D210FAF7CFD1883DB09A89A /* AppModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 723E09E9D7FE2E5D497DFBCD /* AppModel.swift */; };
 		147B0931D3F5510E8C915DEE /* BridgeCore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 24AB34DE24119E0E29A2750D /* BridgeCore.swift */; };
 		1685EA00552C7D6875F3DC9C /* Snapshot.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4DF10DD89DCB9DE1EC9DE7EC /* Snapshot.swift */; };
@@ -117,6 +118,7 @@
 		E84DCE44F38B7BCCB9AA5FDD /* AccountClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccountClient.swift; sourceTree = "<group>"; };
 		EA7D64C277B941713DE830EF /* Gatekeeper.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Gatekeeper.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		F5C519B06442447AC49CFCD8 /* main.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = main.swift; sourceTree = "<group>"; };
+		F68DF3A04CD8115AFF3ADCC0 /* AccountIntegrationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccountIntegrationTests.swift; sourceTree = "<group>"; };
 		FBC653646B7E0A0B9CCB19E2 /* SafariWebExtensionHandler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SafariWebExtensionHandler.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -171,6 +173,7 @@
 		6B96E050FB5F19E5F62EBFA0 /* Tests */ = {
 			isa = PBXGroup;
 			children = (
+				F68DF3A04CD8115AFF3ADCC0 /* AccountIntegrationTests.swift */,
 				48C878059E3F64428F09EB6A /* LogicTests.swift */,
 				0B51A1838B16085F0142B5A1 /* Fixtures */,
 			);
@@ -450,6 +453,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				DC2DC24F6190F9FFC8B21974 /* AccountClient.swift in Sources */,
+				0853E6D083CB0B215B72D6BB /* AccountIntegrationTests.swift in Sources */,
 				219A3A0EC4BFAAF1FB37B7E4 /* AccountStore.swift in Sources */,
 				147B0931D3F5510E8C915DEE /* BridgeCore.swift in Sources */,
 				1B35B7585A0684D6CF205401 /* Browsers.swift in Sources */,
