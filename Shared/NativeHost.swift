@@ -4,14 +4,14 @@ import Foundation
 /// Since 0.3 the account on the relay carries Today and exam mode; native messaging only reopens the Mac app while
 /// exam mode is on, and hands over a pairing code so the Mac can join the account a browser is already in.
 enum NativeHost {
-    static let name = "com.gatekeeper.helper"
+    static var name: String { Identity.hostName }
 
     /// The extension IDs the host answers, besides any the app finds in the browsers' preferences.
-    /// kfikbbdocggfgfhaegkgkfomhmacdbjp is the unpacked extension loaded from ~/gatekeeper-app/extension.
-    static let knownExtensionIDs = ["kfikbbdocggfgfhaegkgkfomhmacdbjp"]
+    /// For this build, see Identity.extensionIDs.
+    static var knownExtensionIDs: [String] { Identity.extensionIDs }
 
     static let bridgeExecutable = "gatekeeper-bridge"
-    static let appBundleID = "com.gatekeeper.mac"
+    static var appBundleID: String { Identity.appBundleID }
 
     /// The user's real home folder. In the sandboxed Safari extension, FileManager's home is the sandbox's own
     /// container, which the app never reads (QA round 2, C1); the extension's entitlement lets it write to this
@@ -26,7 +26,7 @@ enum NativeHost {
     static var folder: URL {
         // Tests point this at a scratch folder so they never touch the real files.
         if let dir = ProcessInfo.processInfo.environment["GATEKEEPER_FOLDER"] { return URL(fileURLWithPath: dir, isDirectory: true) }
-        return realHome.appendingPathComponent("Library/Application Support/Gatekeeper", isDirectory: true)
+        return realHome.appendingPathComponent("Library/Application Support/\(Identity.folderName)", isDirectory: true)
     }
 
     /// A 6-digit code a browser of the account handed over, for the Mac to join with (pair.json).

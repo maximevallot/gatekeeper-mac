@@ -33,7 +33,7 @@ targets:
     info:
       path: Gatekeeper/Info.plist
       properties:
-        CFBundleDisplayName: Gatekeeper
+        CFBundleDisplayName: Gatekeeper 0.3 (test)
         CFBundleShortVersionString: $(MARKETING_VERSION)
         CFBundleVersion: $(CURRENT_PROJECT_VERSION)
         LSUIElement: true
@@ -43,7 +43,7 @@ targets:
         NSHumanReadableCopyright: ""
     settings:
       base:
-        PRODUCT_BUNDLE_IDENTIFIER: com.gatekeeper.mac
+        PRODUCT_BUNDLE_IDENTIFIER: com.gatekeeper.mac.test
         PRODUCT_NAME: Gatekeeper
         # Free Apple ID: "Sign to Run Locally". No team, no account, no paid program needed.
         CODE_SIGN_STYLE: Manual
@@ -69,7 +69,7 @@ targets:
     info:
       path: Safari/Info.plist
       properties:
-        CFBundleDisplayName: Gatekeeper
+        CFBundleDisplayName: Gatekeeper 0.3 (test)
         CFBundleShortVersionString: $(MARKETING_VERSION)
         CFBundleVersion: $(CURRENT_PROJECT_VERSION)
         NSExtension:
@@ -82,11 +82,13 @@ targets:
         com.apple.security.app-sandbox: true
         # The one folder the Mac link uses, shared with Gatekeeper.app and the Chrome/Brave bridge.
         com.apple.security.temporary-exception.files.home-relative-path.read-write:
-          - /Library/Application Support/Gatekeeper/
+          - /Library/Application Support/Gatekeeper Test/
     settings:
       base:
         PRODUCT_NAME: GatekeeperSafari
-        PRODUCT_BUNDLE_IDENTIFIER: com.gatekeeper.mac.safari
+        PRODUCT_BUNDLE_IDENTIFIER: com.gatekeeper.mac.test.safari
+        # The account branch's extension, pointed at the staging relay; read only.
+        GATEKEEPER_EXTENSION_DIR: $(HOME)/gatekeeper-app-0.3/extension
         CODE_SIGN_STYLE: Manual
         CODE_SIGN_IDENTITY: "-"
         DEVELOPMENT_TEAM: ""
@@ -102,7 +104,7 @@ targets:
     settings:
       base:
         PRODUCT_NAME: gatekeeper-bridge
-        PRODUCT_BUNDLE_IDENTIFIER: com.gatekeeper.mac.bridge
+        PRODUCT_BUNDLE_IDENTIFIER: com.gatekeeper.mac.test.bridge
         CODE_SIGN_STYLE: Manual
         CODE_SIGN_IDENTITY: "-"
         DEVELOPMENT_TEAM: ""
@@ -122,7 +124,7 @@ targets:
       - Gatekeeper/Mac/Browsers.swift
     settings:
       base:
-        PRODUCT_BUNDLE_IDENTIFIER: com.gatekeeper.mac.tests
+        PRODUCT_BUNDLE_IDENTIFIER: com.gatekeeper.mac.test.tests
         CODE_SIGN_STYLE: Manual
         CODE_SIGN_IDENTITY: "-"
         DEVELOPMENT_TEAM: ""

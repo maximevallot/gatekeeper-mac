@@ -23,6 +23,28 @@ Developer account, not even a free Apple ID.
 Stop it with the ■ button in Xcode. While exam mode is off you can also quit from the popup: click "Normal
 day", then Quit Gatekeeper.
 
+## Testing 0.3 beside 0.2
+
+This branch builds **Gatekeeper 0.3 (test)**: bundle ID `com.gatekeeper.mac.test`, its own folder
+(`~/Library/Application Support/Gatekeeper Test`), its own Safari extension (`com.gatekeeper.mac.test.safari`,
+built from `~/gatekeeper-app-0.3/extension`), its own Brave host (`com.gatekeeper.helper.test`), the staging relay
+(`https://gatekeeper-relay-staging.mvallot22.workers.dev`), and it does not add itself to Login Items. It can sit
+next to the 0.2 app without touching it, but two Gatekeepers running at once would both hide apps and both
+count, so turn 0.2 off while testing:
+
+1. Quit the 0.2 Mac app: in Xcode's 0.2 window press ■, or in its popup click Normal day › Quit Gatekeeper. In its
+   Settings, untick **Open Gatekeeper when you log in** for the time of the test.
+2. In Safari › Settings › Extensions, untick the 0.2 **Gatekeeper**. In Brave, `brave://extensions`: turn the 0.2
+   Gatekeeper off and load `~/gatekeeper-app-0.3/extension` unpacked.
+3. Open `~/gatekeeper-mac-0.3/Gatekeeper.xcodeproj` in Xcode (File › Open…), check **Gatekeeper › My Mac**, press ▶.
+4. Safari › Settings › Developer: **Allow unsigned extensions** (again after any Safari restart), then Extensions:
+   tick **Gatekeeper 0.3 (test)** and set Edit Websites… › Other websites to **Allow**.
+5. Set up Gatekeeper in Brave, then in Safari choose "Already use Gatekeeper?" with the code from Brave's
+   Settings › Add a device. Join the Mac app the same way: click the arch, type a fresh code.
+
+To go back: quit 0.3 (■ in its Xcode window), untick it in Safari, turn the 0.2 extension back on in Brave and
+Safari, run 0.2 from its Xcode window, and tick Open at login again.
+
 ## Join your Gatekeeper (0.3)
 
 Since 0.3 there is one Gatekeeper per person: an account that every browser and this Mac join. The Mac app has no

@@ -60,13 +60,13 @@ enum Browsers {
             guard let entry = value as? [String: Any] else { continue }
             let name = (entry["manifest"] as? [String: Any])?["name"] as? String
             let path = entry["path"] as? String ?? ""
-            if name == "Gatekeeper" || path.hasSuffix("/gatekeeper-app/extension") { return id }
+            if Identity.extensionIDs.contains(id) || Identity.extensionPathSuffixes.contains(where: path.hasSuffix) { return id }
         }
         return nil
     }
 
     /// The Safari version of the extension, inside this app.
-    static let safariExtensionID = "com.gatekeeper.mac.safari"
+    static var safariExtensionID: String { Identity.safariExtensionID }
 
     static func name(_ bundleID: String) -> String {
         known[bundleID] ?? bundleID

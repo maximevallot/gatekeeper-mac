@@ -137,7 +137,7 @@ final class AppModel: ObservableObject {
     func takeFirstRun() -> Bool {
         guard !defaults.bool(forKey: Keys.firstRunDone) else { return false }
         defaults.set(true, forKey: Keys.firstRunDone)
-        setOpensAtLogin(true)
+        if Identity.opensAtLoginByDefault { setOpensAtLogin(true) }
         return true
     }
 

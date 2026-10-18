@@ -23,8 +23,10 @@
 		3AF441091C9556FB6C525CF3 /* ExamGuard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 09DF7DDB644F1C3E338BCA2F /* ExamGuard.swift */; };
 		453FBAB84B9D057F7539343C /* RingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C3082F88577B0E470AC078BD /* RingView.swift */; };
 		45A37BA8710862D0FF77C6EA /* NativeHost.swift in Sources */ = {isa = PBXBuildFile; fileRef = 35C74CD4B33CD555F9A4ECE5 /* NativeHost.swift */; };
+		4F7BA28B68EE6425D1BA2DC5 /* Identity.swift in Sources */ = {isa = PBXBuildFile; fileRef = 407747567CD0A5E59934916B /* Identity.swift */; };
 		530C55FA838A116D07D7FB39 /* HostInstaller.swift in Sources */ = {isa = PBXBuildFile; fileRef = 015D785442DE072F00E8AD4F /* HostInstaller.swift */; };
 		566C80A1F807EE271927D9F8 /* Browsers.swift in Sources */ = {isa = PBXBuildFile; fileRef = 69682C2E07CCDA217A70EC27 /* Browsers.swift */; };
+		5BEAE953690E243AEAC1317F /* Identity.swift in Sources */ = {isa = PBXBuildFile; fileRef = 407747567CD0A5E59934916B /* Identity.swift */; };
 		5CEFE4FE6BDE04F9E4EAD54D /* extension-snapshot-sites.json in Resources */ = {isa = PBXBuildFile; fileRef = D6502ABEF0F61DDC6F23AA07 /* extension-snapshot-sites.json */; };
 		5EF97F72FEB4FAA0EF34A812 /* NativeHost.swift in Sources */ = {isa = PBXBuildFile; fileRef = 35C74CD4B33CD555F9A4ECE5 /* NativeHost.swift */; };
 		62F61B78566305E5E425361D /* Snapshot.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4DF10DD89DCB9DE1EC9DE7EC /* Snapshot.swift */; };
@@ -36,6 +38,7 @@
 		A192CE63DDFDEFC710CD08A6 /* GatekeeperApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC2E2DD589B6E209EAAE9F95 /* GatekeeperApp.swift */; };
 		A2D403EACC866DFABB94441D /* BridgeCore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 24AB34DE24119E0E29A2750D /* BridgeCore.swift */; };
 		A6CCB5E0C017B734CA9C1FDE /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 1EB5E9079F92D757277F3E04 /* Assets.xcassets */; };
+		B689EE17DF99648151FF5695 /* Identity.swift in Sources */ = {isa = PBXBuildFile; fileRef = 407747567CD0A5E59934916B /* Identity.swift */; };
 		B8CE4A23E2F905E37BF0714E /* LogicTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 48C878059E3F64428F09EB6A /* LogicTests.swift */; };
 		B9BFBBE427EAB2999AA02308 /* TodayView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7FCFD727FB07F24DE23DD631 /* TodayView.swift */; };
 		BC0FECAA1C6EB2A728010BF2 /* AccountClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = E84DCE44F38B7BCCB9AA5FDD /* AccountClient.swift */; };
@@ -44,6 +47,7 @@
 		DC2DC24F6190F9FFC8B21974 /* AccountClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = E84DCE44F38B7BCCB9AA5FDD /* AccountClient.swift */; };
 		DE644C3C74E489C99D66E684 /* NativeHost.swift in Sources */ = {isa = PBXBuildFile; fileRef = 35C74CD4B33CD555F9A4ECE5 /* NativeHost.swift */; };
 		E2B2677BCCE31A34E73C8B5D /* gatekeeper-bridge in Embed Dependencies */ = {isa = PBXBuildFile; fileRef = 9AA7DF378B0737E7FAEA218B /* gatekeeper-bridge */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		EC6D62C975758E788D97D4BE /* Identity.swift in Sources */ = {isa = PBXBuildFile; fileRef = 407747567CD0A5E59934916B /* Identity.swift */; };
 		FD254DAF6FE3B54F0A96D28E /* NativeHost.swift in Sources */ = {isa = PBXBuildFile; fileRef = 35C74CD4B33CD555F9A4ECE5 /* NativeHost.swift */; };
 /* End PBXBuildFile section */
 
@@ -96,6 +100,7 @@
 		24AB34DE24119E0E29A2750D /* BridgeCore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BridgeCore.swift; sourceTree = "<group>"; };
 		287226FBF8DC40CFC5480EA3 /* GatekeeperTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = GatekeeperTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		35C74CD4B33CD555F9A4ECE5 /* NativeHost.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NativeHost.swift; sourceTree = "<group>"; };
+		407747567CD0A5E59934916B /* Identity.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Identity.swift; sourceTree = "<group>"; };
 		48C878059E3F64428F09EB6A /* LogicTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LogicTests.swift; sourceTree = "<group>"; };
 		4DF10DD89DCB9DE1EC9DE7EC /* Snapshot.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Snapshot.swift; sourceTree = "<group>"; };
 		4FE36075A7DB5AF2110D20A2 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
@@ -165,6 +170,7 @@
 			isa = PBXGroup;
 			children = (
 				24AB34DE24119E0E29A2750D /* BridgeCore.swift */,
+				407747567CD0A5E59934916B /* Identity.swift */,
 				35C74CD4B33CD555F9A4ECE5 /* NativeHost.swift */,
 			);
 			path = Shared;
@@ -438,6 +444,7 @@
 				7B3768AE3E26E7D93894B198 /* ExamViews.swift in Sources */,
 				A192CE63DDFDEFC710CD08A6 /* GatekeeperApp.swift in Sources */,
 				530C55FA838A116D07D7FB39 /* HostInstaller.swift in Sources */,
+				EC6D62C975758E788D97D4BE /* Identity.swift in Sources */,
 				1FEC3365C431C4C1435C7C06 /* KeptAwayNotice.swift in Sources */,
 				FD254DAF6FE3B54F0A96D28E /* NativeHost.swift in Sources */,
 				453FBAB84B9D057F7539343C /* RingView.swift in Sources */,
@@ -458,6 +465,7 @@
 				147B0931D3F5510E8C915DEE /* BridgeCore.swift in Sources */,
 				1B35B7585A0684D6CF205401 /* Browsers.swift in Sources */,
 				3AF441091C9556FB6C525CF3 /* ExamGuard.swift in Sources */,
+				5BEAE953690E243AEAC1317F /* Identity.swift in Sources */,
 				B8CE4A23E2F905E37BF0714E /* LogicTests.swift in Sources */,
 				45A37BA8710862D0FF77C6EA /* NativeHost.swift in Sources */,
 				1685EA00552C7D6875F3DC9C /* Snapshot.swift in Sources */,
@@ -469,6 +477,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				97FA7A66E69EAA31A94E6EA5 /* BridgeCore.swift in Sources */,
+				B689EE17DF99648151FF5695 /* Identity.swift in Sources */,
 				DE644C3C74E489C99D66E684 /* NativeHost.swift in Sources */,
 				8DEBC85807E3C66948336CF6 /* SafariWebExtensionHandler.swift in Sources */,
 				362C2E175B304EBACABAD2FE /* Snapshot.swift in Sources */,
@@ -480,6 +489,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				85E5D3260BCEA239F1D3E75A /* BridgeCore.swift in Sources */,
+				4F7BA28B68EE6425D1BA2DC5 /* Identity.swift in Sources */,
 				5EF97F72FEB4FAA0EF34A812 /* NativeHost.swift in Sources */,
 				CE0E52E5BF9290DA9D541B4A /* Snapshot.swift in Sources */,
 				1C6A6F212C1D247736D7AB69 /* main.swift in Sources */,
@@ -519,7 +529,7 @@
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = com.gatekeeper.mac;
+				PRODUCT_BUNDLE_IDENTIFIER = com.gatekeeper.mac.test;
 				PRODUCT_NAME = Gatekeeper;
 				SDKROOT = macosx;
 			};
@@ -600,6 +610,7 @@
 				DEVELOPMENT_TEAM = "";
 				ENABLE_HARDENED_RUNTIME = NO;
 				ENABLE_USER_SCRIPT_SANDBOXING = NO;
+				GATEKEEPER_EXTENSION_DIR = "$(HOME)/gatekeeper-app-0.3/extension";
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = Safari/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -607,7 +618,7 @@
 					"@executable_path/../Frameworks",
 					"@executable_path/../../../../Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = com.gatekeeper.mac.safari;
+				PRODUCT_BUNDLE_IDENTIFIER = com.gatekeeper.mac.test.safari;
 				PRODUCT_NAME = GatekeeperSafari;
 				SDKROOT = macosx;
 				SKIP_INSTALL = YES;
@@ -624,6 +635,7 @@
 				DEVELOPMENT_TEAM = "";
 				ENABLE_HARDENED_RUNTIME = NO;
 				ENABLE_USER_SCRIPT_SANDBOXING = NO;
+				GATEKEEPER_EXTENSION_DIR = "$(HOME)/gatekeeper-app-0.3/extension";
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = Safari/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -631,7 +643,7 @@
 					"@executable_path/../Frameworks",
 					"@executable_path/../../../../Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = com.gatekeeper.mac.safari;
+				PRODUCT_BUNDLE_IDENTIFIER = com.gatekeeper.mac.test.safari;
 				PRODUCT_NAME = GatekeeperSafari;
 				SDKROOT = macosx;
 				SKIP_INSTALL = YES;
@@ -655,7 +667,7 @@
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = com.gatekeeper.mac;
+				PRODUCT_BUNDLE_IDENTIFIER = com.gatekeeper.mac.test;
 				PRODUCT_NAME = Gatekeeper;
 				SDKROOT = macosx;
 			};
@@ -675,7 +687,7 @@
 					"@executable_path/../Frameworks",
 					"@loader_path/../Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = com.gatekeeper.mac.tests;
+				PRODUCT_BUNDLE_IDENTIFIER = com.gatekeeper.mac.test.tests;
 				SDKROOT = macosx;
 			};
 			name = Debug;
@@ -694,7 +706,7 @@
 					"@executable_path/../Frameworks",
 					"@loader_path/../Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = com.gatekeeper.mac.tests;
+				PRODUCT_BUNDLE_IDENTIFIER = com.gatekeeper.mac.test.tests;
 				SDKROOT = macosx;
 			};
 			name = Release;
@@ -711,7 +723,7 @@
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = com.gatekeeper.mac.bridge;
+				PRODUCT_BUNDLE_IDENTIFIER = com.gatekeeper.mac.test.bridge;
 				PRODUCT_NAME = "gatekeeper-bridge";
 				SDKROOT = macosx;
 				SKIP_INSTALL = YES;
@@ -730,7 +742,7 @@
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = com.gatekeeper.mac.bridge;
+				PRODUCT_BUNDLE_IDENTIFIER = com.gatekeeper.mac.test.bridge;
 				PRODUCT_NAME = "gatekeeper-bridge";
 				SDKROOT = macosx;
 				SKIP_INSTALL = YES;

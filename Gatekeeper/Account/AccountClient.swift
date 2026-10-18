@@ -31,7 +31,7 @@ struct AccountClient {
     static var defaultRelay: URL {
         if let env = ProcessInfo.processInfo.environment["GATEKEEPER_RELAY"], let url = URL(string: env) { return url }
         if let saved = UserDefaults.standard.string(forKey: "relayURL"), let url = URL(string: saved) { return url }
-        return URL(string: "https://gatekeeper-relay.mvallot22.workers.dev")!
+        return URL(string: Identity.relay)!
     }
 
     // MARK: Join

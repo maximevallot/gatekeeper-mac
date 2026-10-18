@@ -279,7 +279,7 @@ final class BridgeExchangeTests: XCTestCase {
     func testTheFolderIsInTheRealHomeNotASandbox() {
         unsetenv("GATEKEEPER_FOLDER")
         XCTAssertFalse(NativeHost.folder.path.contains("/Library/Containers/"))
-        XCTAssertTrue(NativeHost.folder.path.hasSuffix("Library/Application Support/Gatekeeper"))
+        XCTAssertTrue(NativeHost.folder.path.hasSuffix("Library/Application Support/\(Identity.folderName)"))
         setenv("GATEKEEPER_FOLDER", dir.path, 1)
     }
 
