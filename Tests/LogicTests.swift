@@ -313,8 +313,9 @@ final class AccountClientTests: XCTestCase {
     }
 
     func testJoinWithACode() async throws {
-        StubRelay.answers[AccountClient.API.join] = (200, ["deviceId": "dev-1", "deviceKey": "key-1", "accountId": "acc-1"])
-        let m = try await client.join(code: "12 34 56")
+        StubRelay.answers[AccountClient.API.join] = (200, ["v": 1, "accountId": "acc-1", "device": ["id": "dev-1", "token": "key-1"],
+                                                           "copy": [:], "version": 1, "serverNow": 1])
+        let m = try await client.join(code: "12 34 56").membership
         XCTAssertEqual(m.deviceId, "dev-1")
         XCTAssertEqual(m.deviceKey, "key-1")
         XCTAssertEqual(StubRelay.lastBody?["code"] as? String, "123456")
@@ -322,9 +323,9 @@ final class AccountClientTests: XCTestCase {
     }
 
     func testAWrongCodeSaysWhy() async {
-        StubRelay.answers[AccountClient.API.join] = (410, ["error": "code_expired"])
+        StubRelay.answers[AccountClient.API.join] = (404, ["v": 1, "error": "bad_code"])
         do { _ = try await client.join(code: "000000"); XCTFail() } catch {
-            XCTAssertEqual(error as? AccountClient.Failure, .badCode("code_expired"))
+            XCTAssertEqual(error as? AccountClient.Failure, .badCode("bad_code"))
         }
     }
 
@@ -332,20 +333,41 @@ final class AccountClientTests: XCTestCase {
         let snapshot: [String: Any] = ["v": 1, "at": 5, "reopensAt": 9e12,
                                        "kinds": [["kind": "social", "label": "Social media", "status": "open", "minutes": 15, "left": 9]],
                                        "exam": ["until": 9e12, "goal": "midterm"]]
-        StubRelay.answers[AccountClient.API.sync] = (200, ["snapshot": snapshot, "taken": ["r1"]])
+        StubRelay.answers[AccountClient.API.sync] = (200, ["v": 1, "version": 9, "serverNow": 1, "spansUpTo": 0,
+                                                           "copy": ["rules": ["exam": ["until": 9e12, "goal": "midterm"]]],
+                                                           "today": snapshot, "results": [["id": "r1", "ok": true]]])
         let m = AccountMembership(relay: "http://relay.test", deviceId: "dev-1", deviceKey: "key-1", accountId: nil, joinedAt: Date())
-        let synced = try await client.sync(m, requests: [["id": "r1", "type": "exam.start", "until": 9e12]])
-        XCTAssertEqual(synced.snapshot.kinds.first?.left, 9)
-        XCTAssertEqual(synced.snapshot.exam?.goal, "midterm")
-        XCTAssertEqual(synced.taken, ["r1"])
+        let synced = try await client.sync(m, have: 7, requests: [["id": "r1", "type": "startExam", "until": 9e12, "source": "mac"]])
+        XCTAssertEqual(synced.today?.kinds.first?.left, 9)
+        XCTAssertEqual(synced.today?.exam?.goal, "midterm")
+        XCTAssertEqual(synced.version, 9)
+        XCTAssertNotNil(synced.results["r1"])
         XCTAssertEqual(StubRelay.lastAuth, "Bearer key-1")
-        XCTAssertEqual((StubRelay.lastBody?["requests"] as? [[String: Any]])?.first?["type"] as? String, "exam.start")
+        XCTAssertEqual(StubRelay.lastBody?["have"] as? Int, 7)
+        XCTAssertEqual((StubRelay.lastBody?["requests"] as? [[String: Any]])?.first?["type"] as? String, "startExam")
+    }
+
+    func testWithoutTodayExamModeComesFromTheCopy() async throws {
+        StubRelay.answers[AccountClient.API.sync] = (200, ["v": 1, "version": 3, "serverNow": 1,
+                                                           "copy": ["rules": ["exam": ["until": 9e12, "goal": "final"]]], "results": []])
+        let m = AccountMembership(relay: "http://relay.test", deviceId: "d", deviceKey: "k", accountId: nil, joinedAt: Date())
+        let synced = try await client.sync(m, have: nil, requests: [])
+        XCTAssertNil(synced.today)
+        XCTAssertEqual(synced.examFromCopy?.goal, "final")
+    }
+
+    func testUnchangedKeepsTheLastToday() async throws {
+        StubRelay.answers[AccountClient.API.sync] = (200, ["v": 1, "version": 7, "serverNow": 1, "unchanged": true])
+        let m = AccountMembership(relay: "http://relay.test", deviceId: "d", deviceKey: "k", accountId: nil, joinedAt: Date())
+        let synced = try await client.sync(m, have: 7, requests: [])
+        XCTAssertTrue(synced.unchanged)
+        XCTAssertNil(synced.today)
     }
 
     func testARemovedDeviceIsToldApart() async {
-        StubRelay.answers[AccountClient.API.sync] = (401, ["error": "device_removed"])
+        StubRelay.answers[AccountClient.API.sync] = (401, ["v": 1, "error": "bad_token"])
         let m = AccountMembership(relay: "http://relay.test", deviceId: "d", deviceKey: "k", accountId: nil, joinedAt: Date())
-        do { _ = try await client.sync(m, requests: []); XCTFail() } catch {
+        do { _ = try await client.sync(m, have: nil, requests: []); XCTFail() } catch {
             XCTAssertEqual(error as? AccountClient.Failure, .removed)
         }
     }

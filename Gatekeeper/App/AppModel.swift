@@ -70,6 +70,8 @@ final class AppModel: ObservableObject {
     private var syncing = false
     /// Requests waiting for the account to take them (only exam.start), sent with every sync until taken.
     private var outbox: [[String: Any]] = []
+    /// The version of the account's copy the Mac last got; sent as `have`.
+    private var copyVersion: Int?
     private let log = Logger(subsystem: "com.gatekeeper.mac", category: "account")
 
     private enum Keys {
@@ -178,11 +180,14 @@ final class AppModel: ObservableObject {
         joining = true
         defer { joining = false }
         do {
-            let m = try await AccountClient(relay: AccountClient.defaultRelay).join(code: code)
-            try AccountStore.save(m)
-            membership = m
+            let joined = try await AccountClient(relay: AccountClient.defaultRelay).join(code: code)
+            try AccountStore.save(joined.membership)
+            membership = joined.membership
             problem = nil
-            log.notice("joined the account as device \(m.deviceId, privacy: .public)")
+            lastSynced = Date()
+            if let today = joined.today { accept(today) }
+            log.notice("joined the account as device \(joined.membership.deviceId, privacy: .public)")
+            update()
             await syncNow()
         } catch let failure as AccountClient.Failure {
             problem = Self.words(for: failure)
@@ -197,12 +202,19 @@ final class AppModel: ObservableObject {
         syncing = true
         defer { syncing = false }
         do {
+            let sent = outbox
             let synced = try await AccountClient(relay: URL(string: m.relay) ?? AccountClient.defaultRelay)
-                .sync(m, requests: outbox)
+                .sync(m, have: copyVersion, requests: sent)
             lastSynced = Date()
             problem = nil
-            outbox.removeAll { ($0["id"] as? String).map(synced.taken.contains) ?? false }
-            accept(synced.snapshot)
+            if let v = synced.version { copyVersion = v }
+            handle(results: synced.results)
+            if let today = synced.today {
+                accept(today)
+            } else if !synced.unchanged {
+                // No Today came back (an account without it): hold exam mode from the copy at least.
+                acceptExam(synced.examFromCopy, at: AccountClient.millis(Date()))
+            }
             update()
         } catch AccountClient.Failure.removed {
             // Removed from another device, or the account was deleted: carry on with what the Mac knows (exam mode
@@ -218,6 +230,27 @@ final class AppModel: ObservableObject {
         } catch {
             problem = "Something went wrong talking to your Gatekeeper."
         }
+    }
+
+    /// An answered request is done. A refused exam start ends the wait at once and says why.
+    private func handle(results: [String: [String: Any]]) {
+        outbox.removeAll { ($0["id"] as? String).map { results[$0] != nil } ?? false }
+        guard let p = pendingStart, let r = results[p.id] else { return }
+        if let refused = r["refused"] as? String {
+            pendingStart = nil
+            problem = refused == "mac_cannot_loosen"
+                ? "Your Gatekeeper refused that change from this Mac."
+                : "Your Gatekeeper didn't start exam mode (\(refused))."
+        }
+    }
+
+    /// Exam mode read from the account's copy, when no Today came with it.
+    private func acceptExam(_ exam: Snapshot.Exam?, at: Double) {
+        let s = Snapshot(v: 1, at: at, browser: nil, extensionId: nil, pages: nil, base: nil, goal: snapshot?.goal,
+                         reopensAt: snapshot?.reopensAt ?? 0, waiting: nil, kinds: snapshot?.kinds ?? [],
+                         sites: snapshot?.sites, exam: exam, watch: nil)
+        let held = Follow.hold(heldExam, seeing: s)
+        if held != heldExam { heldExam = held }
     }
 
     /// Only a snapshot no older than the last counts; exam mode is held from it (QA round 2, H2, H3).
@@ -244,9 +277,8 @@ final class AppModel: ObservableObject {
         switch failure {
         case let .badCode(reason):
             switch reason {
-            case "code_expired", "expired": return "That code has expired. Codes work for 10 minutes; get a new one."
-            case "code_used", "used": return "That code was already used. Get a new one."
-            default: return "That code didn't work. Check the 6 digits, or get a new one."
+            case "too_many_codes", "daily_limit": return "Too many tries for now. Wait a little, then get a new code."
+            default: return "That code didn't work: it may be wrong, used or older than 10 minutes. Get a new one under Settings › Add a device."
             }
         case .removed: return "This Mac was removed from your Gatekeeper. Join again with a code."
         case .unreachable: return "Can't reach your Gatekeeper. Check the internet connection."
@@ -326,22 +358,22 @@ final class AppModel: ObservableObject {
 
     private func queueExamStart() {
         guard let p = pendingStart else { return }
-        outbox.removeAll { $0["type"] as? String == "exam.start" }
-        var request: [String: Any] = ["id": p.id, "type": "exam.start", "until": (p.until.timeIntervalSince1970 * 1000).rounded()]
+        outbox.removeAll { $0["type"] as? String == "startExam" }
+        var request: [String: Any] = ["id": p.id, "type": "startExam", "source": "mac", "until": AccountClient.millis(p.until)]
         if !p.goal.isEmpty { request["goal"] = p.goal }
         outbox.append(request)
     }
 
     private func followPendingStart(_ t: Date) {
         guard let p = pendingStart else { return }
-        let stillQueued = outbox.contains { $0["type"] as? String == "exam.start" }
+        let stillQueued = outbox.contains { $0["type"] as? String == "startExam" }
         switch Follow.pendingStep(until: p.until, asked: p.asked, queued: p.queued, stillQueued: stillQueued,
                                   snapshot: snapshot, connected: connected, now: t) {
         case .confirmed:
             pendingStart = nil
         case .drop:
             pendingStart = nil
-            outbox.removeAll { $0["type"] as? String == "exam.start" }
+            outbox.removeAll { $0["type"] as? String == "startExam" }
         case .resend:
             pendingStart?.queued = t
             queueExamStart()
