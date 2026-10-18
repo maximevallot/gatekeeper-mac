@@ -6,6 +6,25 @@ session that owns `~/gatekeeper-app`; it works end to end since 2026-10-17. With
 asks to connect and has no rules, no exam mode and no sample day of its own (Maxime's decision of 2026-10-17,
 "Ask to connect", from the one-model review in `~/brain/outputs/html/2026-10-17-gatekeeper-one-model.html`).
 
+## Since 0.3: the account carries Today
+
+From 0.3 each person has one Gatekeeper account on the relay (~/gatekeeper-relay `docs/account-contract.md`,
+version 1). The Mac app is a device in it: it joins with a 6-digit code, syncs about every 30 seconds, gets the
+account's Today (`today`, in the snapshot shape below) and sends its one kind of request, `startExam`. So in 0.3:
+
+- Native messaging no longer carries Today and no longer hands over requests. The bridge still reads the snapshot
+  the extension sends (and refuses one it cannot read), for two things that must be instant on this Mac: while
+  exam mode is on it reopens Gatekeeper if it is not running, and if the snapshot carries `pairCode` (a fresh
+  6-digit code from the account) and the Mac has not joined, it keeps the code so the Mac joins the same account
+  without anyone typing it. The reply's `mac` gains `joined`, so the extension knows whether to send a code.
+- "Two browsers" below is gone: every browser and the Mac are devices of one account, so there is nothing to
+  follow. `linked.json`, `snapshots/` and `requests/` are deleted at launch.
+- Exam mode is held as before: from the account's Today, kept until its end across relaunches and while offline;
+  only a newer Today from the account ends it.
+
+The rest of this file is the native-messaging contract as it stood in 0.2, kept because the snapshot shape and
+its reading rules are what `today` uses.
+
 ## The idea
 
 The extension stays the one home of the rules. Its engine already decides what a change is (tighter: now;
@@ -39,7 +58,7 @@ extension (Brave or Chrome)                     Mac
    browser the Mac follows; the app writes one file per request in `requests/`; the bridge hands each over once,
    to the followed browser only, and deletes it.
 
-### Two browsers
+### Two browsers (0.2 only)
 
 Until Gatekeeper has one account per person with the Mac as the hub, the Mac follows **one** browser
 (QA round 2, C2 and H1):

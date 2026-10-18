@@ -4,7 +4,7 @@ The Mac partner of the Gatekeeper extension (`~/gatekeeper-app`). A menu-bar app
 from the design canvas, and its exam mode hides or quits the apps an extension cannot reach (Mail, Outlook,
 Slack, WhatsApp, Messages, Discord) and every browser except the one running the extension.
 
-Version 0.2.0, 2026-10-17. Runs on macOS 14 or later. Signed "to run locally", so it needs no Apple
+Version 0.3.0 (branch `account`, not released), 2026-10-18. Runs on macOS 14 or later. Signed "to run locally", so it needs no Apple
 Developer account, not even a free Apple ID.
 
 ## Run it
@@ -23,34 +23,33 @@ Developer account, not even a free Apple ID.
 Stop it with the ■ button in Xcode. While exam mode is off you can also quit from the popup: click "Normal
 day", then Quit Gatekeeper.
 
-## What you should see
+## Join your Gatekeeper (0.3)
 
-**Before the browser is connected**, the popup says **Gatekeeper** with a grey "Not connected" chip, and one
-step: in Brave, open Gatekeeper's Settings and turn on Mac app. The **Open Brave** button opens that page. The
-Mac app has no rules or sample day of its own; it only shows what the browser decided.
+Since 0.3 there is one Gatekeeper per person: an account that every browser and this Mac join. The Mac app has no
+rules of its own; it shows the account's Today and hides apps in exam mode.
 
-**Once connected**, the popup says **Today**, with a ring per kind you watch (minutes left, or a red lock "till
-4:00" or "all day"), your goal, a blue **Change something** button that opens the extension's chat, and the links
-**All rules** and **Your week**.
+1. Set up Gatekeeper in a browser first (Brave, Chrome or Safari). Finishing its welcome creates your Gatekeeper.
+2. In that browser, open Gatekeeper's Settings › **Add a device**. It shows a 6-digit code for 10 minutes.
+3. Click the arch in the menu bar and type the code under **Join your Gatekeeper**.
 
-To try exam mode: click **Normal day**, then **Start exam mode…**, pick an end a few minutes away (or **2 h**),
-say what it is for, and press **Start**. The chip says "Starting exam…" until the browser confirms, then "Exam
-till …". Mail, Outlook, Slack, WhatsApp, Messages, Discord and every browser except Brave hide at once; click Mail
-in the Dock and it hides again with a notice "Mail waits till …". At the end the apps come back. **End exam
-mode early…** opens the extension's chat, where you give your reason and the agent decides; the Mac never ends
-it.
+If the browser has Mac app turned on, it hands the code to the Mac by itself and step 3 happens alone.
 
-## Connect it to the extension
+**What you should see once joined:** **Today**, with a ring per kind you watch (minutes left, a red lock "till
+4:00" or "all day"), a ring per site with its own limit, your goal, **Change something** (opens the chat in your
+browser) and the links **All rules** and **Your week**. The Mac asks your Gatekeeper every 30 seconds, so a
+budget spent in Safari shows here within half a minute.
 
-The extension on `~/gatekeeper-app` main (from `94e02f5`) can send today to the Mac. To turn it on:
+**Offline:** the popup says when it last reached your Gatekeeper, keeps trying, and keeps any exam mode it knows
+about until its end. **Leave** (Settings › Your Gatekeeper) takes this Mac out of the account; leaving loosens
+nothing.
 
-1. Run Gatekeeper from Xcode once (above). Each launch tells Brave where the bridge is.
-2. In Brave, go to `brave://extensions` and click the round reload arrow on Gatekeeper.
-3. Open Gatekeeper's rules page, go to Settings, turn on **Mac app**, and accept Brave's prompt
-   ("Communicate with cooperating native applications").
-4. Within a minute the popup changes from "Connect Gatekeeper…" to Today, with your real rings and goal.
+To try exam mode: click **Normal day**, then **Start exam mode…**, pick an end, say what it is for, press **Start**.
+Apps hide at once; the chip says "Starting exam…" until your Gatekeeper confirms, then "Exam till …". Every
+browser in the account goes into exam mode at its next sync. **End exam mode early…** opens the chat in your
+browser, where the agent decides; the Mac never ends it.
 
-If the switch says "Reload Gatekeeper once", reload it as in step 2.
+To test against a relay running on this Mac (`wrangler dev`), start the app with `GATEKEEPER_RELAY=http://127.0.0.1:8787`
+in the scheme's environment (Product › Scheme › Edit Scheme › Run › Arguments).
 
 ## Use it in Safari
 
@@ -64,7 +63,7 @@ time you press Run (that folder is only read). Without the paid Apple developer 
    Safari asks for your Mac password; that is Safari's own prompt. **Do not quit Safari after this.**
 4. Without quitting, go to **Extensions**. Gatekeeper is in the list; tick it. Click **Edit Websites…** and set
    **Other websites** to **Allow**, so it can send a closed site to the gate.
-5. Gatekeeper's welcome page opens in Safari. Set it up as in Brave; Safari keeps its own rules for now.
+5. Gatekeeper's welcome page opens in Safari. Choose "Already use Gatekeeper?" and type the code from your other browser.
 
 If Gatekeeper is not in the list at step 4, check that **Allow unsigned extensions** is still ticked; if it is,
 quit Gatekeeper (■ in Xcode), press ▶ again, and look at Extensions once more.
@@ -80,9 +79,8 @@ settings and says whether Gatekeeper is on there.
 To link Safari to the Mac app, turn on **Mac app** in Gatekeeper's Settings in Safari, as in Brave. In Safari the
 message goes straight to Gatekeeper.app, with nothing else to set up.
 
-**Safari has its own Gatekeeper rules**, separate from Brave's and Chrome's, until Gatekeeper has one account per
-person. The Mac follows **one** browser: the first that connected. If Brave already has Mac app on, Safari's
-switch says the Mac follows Brave; choose which one in the Mac app's Settings, under **Follows**.
+**In 0.3 Safari joins the same Gatekeeper** as your other browsers, with a code from Settings › Add a device, so
+its rules, minutes and exam mode are the same everywhere.
 
 ## What it shows
 
