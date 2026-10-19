@@ -93,10 +93,7 @@ final class AppModel: ObservableObject {
         membership = AccountStore.load()
         NativeHost.removeOldFiles()
 
-        if let found = Browsers.findExtension() {
-            extensionBrowser = found.bundleID
-            extensionID = found.extensionID
-        }
+        findExtension()
         HostInstaller.install(extraIDs: [extensionID].compactMap { $0 })
         guardian.onKeptAway = { [weak self] app in
             guard let self, let until = self.examUntil else { return }
@@ -161,8 +158,37 @@ final class AppModel: ObservableObject {
             // A browser of the same account handed over a fresh code through native messaging.
             Task { await join(code: code) }
         }
+        let caller = NativeHost.loadCaller()
+        if !canOpenExtension || (caller != nil && (caller?.browser != extensionBrowser || caller?.base != extensionBase)),
+           lastFind.map({ t.timeIntervalSince($0) >= 30 }) ?? true {
+            findExtension()
+        }
         if let last = lastSynced, t.timeIntervalSince(last) < Self.syncEvery { return }
         Task { await syncNow() }
+    }
+
+    /// The browser that runs the extension, for opening its pages and sparing it in exam mode: from the last
+    /// browser that talked to the Mac, else from the browsers' settings files. Brave writes a newly loaded extension
+    /// to its settings late, so while nothing is found this is tried again every 30 seconds.
+    private var lastFind: Date?
+    @Published private(set) var extensionBase: String?
+
+    private func findExtension() {
+        lastFind = Date()
+        var browser: String?, id: String?, base: String?
+        if let c = NativeHost.loadCaller(), Browsers.known[c.browser] != nil {
+            browser = c.browser; id = c.extensionId; base = c.base
+        } else if let found = Browsers.findExtension() {
+            browser = found.bundleID; id = found.extensionID
+        }
+        guard let browser, browser != extensionBrowser || id != extensionID || base != extensionBase else { return }
+        let firstID = extensionID == nil
+        extensionBrowser = browser
+        extensionID = id
+        extensionBase = base
+        log.notice("extension found in \(browser, privacy: .public)")
+        if firstID, let id { HostInstaller.install(extraIDs: [id]) }
+        applyGuardSettings()
     }
 
     private func applyGuardSettings() {
@@ -174,7 +200,7 @@ final class AppModel: ObservableObject {
 
     // MARK: The account
 
-    /// Joins the account with the 6-digit code another device shows under Settings › Add a device.
+    /// Joins the account with the 6-digit code another device shows under Add a device.
     func join(code: String) async {
         guard membership == nil, !joining else { return }
         joining = true
@@ -278,7 +304,7 @@ final class AppModel: ObservableObject {
         case let .badCode(reason):
             switch reason {
             case "too_many_codes", "daily_limit": return "Too many tries for now. Wait a little, then get a new code."
-            default: return "That code didn't work: it may be wrong, used or older than 10 minutes. Get a new one under Settings › Add a device."
+            default: return "That code didn't work: it may be wrong, used or older than 10 minutes. Get a new one with Add a device."
             }
         case .removed: return "This Mac was removed from your Gatekeeper. Join again with a code."
         case .unreachable: return "Can't reach your Gatekeeper. Check the internet connection."
@@ -301,7 +327,7 @@ final class AppModel: ObservableObject {
         return g?.isEmpty == false ? g : nil
     }
 
-    var canOpenExtension: Bool { extensionBrowser != nil && (extensionID != nil || snapshot?.base != nil) }
+    var canOpenExtension: Bool { extensionBrowser != nil && (extensionID != nil || extensionBase != nil) }
 
     var browserName: String {
         switch extensionBrowser {
@@ -326,8 +352,8 @@ final class AppModel: ObservableObject {
     func openWeek() { openPage(snapshot?.pages?.week ?? rulesPage) }
 
     private func openPage(_ page: String) {
-        guard let browser = extensionBrowser, let id = extensionID ?? snapshot?.base else { return }
-        Browsers.open(page: page, extensionID: id, base: snapshot?.base, in: browser)
+        guard let browser = extensionBrowser, let id = extensionID ?? extensionBase else { return }
+        Browsers.open(page: page, extensionID: id, base: extensionBase, in: browser)
     }
 
     // MARK: Exam mode

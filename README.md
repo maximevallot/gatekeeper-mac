@@ -40,7 +40,7 @@ count, so turn 0.2 off while testing:
 4. Safari › Settings › Developer: **Allow unsigned extensions** (again after any Safari restart), then Extensions:
    tick **Gatekeeper 0.3 (test)** and set Edit Websites… › Other websites to **Allow**.
 5. Set up Gatekeeper in Brave, then in Safari choose "Already use Gatekeeper?" with the code from Brave's
-   Settings › Add a device. Join the Mac app the same way: click the arch, type a fresh code.
+   **Add a device** (on Today, or All rules › Your Gatekeeper). Join the Mac app the same way: click the arch, type a fresh code.
 
 To go back: quit 0.3 (■ in its Xcode window), untick it in Safari, turn the 0.2 extension back on in Brave and
 Safari, run 0.2 from its Xcode window, and tick Open at login again.
@@ -51,7 +51,8 @@ Since 0.3 there is one Gatekeeper per person: an account that every browser and 
 rules of its own; it shows the account's Today and hides apps in exam mode.
 
 1. Set up Gatekeeper in a browser first (Brave, Chrome or Safari). Finishing its welcome creates your Gatekeeper.
-2. In that browser, open Gatekeeper's Settings › **Add a device**. It shows a 6-digit code for 10 minutes.
+2. In that browser, click **Add a device** on Gatekeeper's Today (or All rules › Your Gatekeeper › Add a device).
+   It shows a 6-digit code for 10 minutes.
 3. Click the arch in the menu bar and type the code under **Join your Gatekeeper**.
 
 If the browser has Mac app turned on, it hands the code to the Mac by itself and step 3 happens alone.
@@ -73,6 +74,14 @@ browser, where the agent decides; the Mac never ends it.
 The account flow is tested end to end against the relay's account under `wrangler dev`: start it with
 `npm run dev:account` in ~/gatekeeper-relay-0.3, then run
 `TEST_RUNNER_GATEKEEPER_RELAY_IT=http://127.0.0.1:8787 xcodebuild -project Gatekeeper.xcodeproj -scheme Gatekeeper test`.
+
+**Later, not in 0.3** (Maxime, 2026-10-19: "fix that long term"):
+- The Mac shows its own **Add a device** code, so another browser or a phone can join from the Mac (the account's
+  `POST /account/code`, from the Mac's token).
+- The Mac can be the **first device**: it creates the account itself (`POST /account/create` with kind `mac`) and
+  runs a short welcome, instead of asking for a browser first.
+- A **chat in the Mac app**, through the account (the `chat` request and the thread in the account's copy), so
+  "Change something" and "End exam mode early" no longer need a browser.
 
 To test against a relay running on this Mac (`wrangler dev`), start the app with `GATEKEEPER_RELAY=http://127.0.0.1:8787`
 in the scheme's environment (Product › Scheme › Edit Scheme › Run › Arguments).
@@ -105,7 +114,7 @@ settings and says whether Gatekeeper is on there.
 To link Safari to the Mac app, turn on **Mac app** in Gatekeeper's Settings in Safari, as in Brave. In Safari the
 message goes straight to Gatekeeper.app, with nothing else to set up.
 
-**In 0.3 Safari joins the same Gatekeeper** as your other browsers, with a code from Settings › Add a device, so
+**In 0.3 Safari joins the same Gatekeeper** as your other browsers, with a code from **Add a device**, so
 its rules, minutes and exam mode are the same everywhere.
 
 ## What it shows

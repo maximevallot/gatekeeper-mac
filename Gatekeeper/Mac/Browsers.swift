@@ -51,7 +51,7 @@ enum Browsers {
         return nil
     }
 
-    private static func gatekeeperID(inPreferences url: URL) -> String? {
+    static func gatekeeperID(inPreferences url: URL) -> String? {
         guard let data = try? Data(contentsOf: url),
               let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
               let settings = (json["extensions"] as? [String: Any])?["settings"] as? [String: Any]
@@ -60,7 +60,8 @@ enum Browsers {
             guard let entry = value as? [String: Any] else { continue }
             let name = (entry["manifest"] as? [String: Any])?["name"] as? String
             let path = entry["path"] as? String ?? ""
-            if Identity.extensionIDs.contains(id) || Identity.extensionPathSuffixes.contains(where: path.hasSuffix) { return id }
+            if Identity.extensionIDs.contains(id) || Identity.extensionPathSuffixes.contains(where: path.hasSuffix)
+                || Identity.extensionNamePrefixes.contains(where: { name?.hasPrefix($0) == true }) { return id }
         }
         return nil
     }

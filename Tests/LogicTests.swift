@@ -391,3 +391,40 @@ final class AccountClientTests: XCTestCase {
         }
     }
 }
+
+/// Finding the 0.3 test extension in a browser's settings file, and learning it from the browser that talks to the Mac.
+final class ExtensionFindingTests: XCTestCase {
+    func prefs(_ settings: [String: Any]) throws -> URL {
+        let url = FileManager.default.temporaryDirectory.appendingPathComponent("prefs-\(UUID().uuidString).json")
+        try JSONSerialization.data(withJSONObject: ["extensions": ["settings": settings]]).write(to: url)
+        return url
+    }
+
+    func testFindsThe03ExtensionAsBraveRecordsIt() throws {
+        // As Brave's Secure Preferences had it on 2026-10-19: unpacked, no manifest name, the 0.2 one disabled beside it.
+        let url = try prefs([
+            "kfikbbdocggfgfhaegkgkfomhmacdbjp": ["path": "/Users/maximevallot/gatekeeper-app/extension", "disable_reasons": [1]],
+            "hkghdhjbbcokmgaaldcfpojbcahajbhe": ["path": "/Users/maximevallot/gatekeeper-app-0.3/extension", "disable_reasons": []],
+        ])
+        XCTAssertEqual(Browsers.gatekeeperID(inPreferences: url), "hkghdhjbbcokmgaaldcfpojbcahajbhe")
+    }
+
+    func testFindsItByNameOrPathToo() throws {
+        let byName = try prefs(["aaaabbbbccccddddeeeeffffgggghhhh": ["path": "/elsewhere", "manifest": ["name": "Gatekeeper 0.3 (test)"]]])
+        XCTAssertEqual(Browsers.gatekeeperID(inPreferences: byName), "aaaabbbbccccddddeeeeffffgggghhhh")
+        let byPath = try prefs(["ppppoooonnnnmmmmllllkkkkjjjjiiii": ["path": "/Users/someone/gatekeeper-app-0.3/extension"]])
+        XCTAssertEqual(Browsers.gatekeeperID(inPreferences: byPath), "ppppoooonnnnmmmmllllkkkkjjjjiiii")
+        let only02 = try prefs(["kfikbbdocggfgfhaegkgkfomhmacdbjp": ["path": "/Users/maximevallot/gatekeeper-app/extension"]])
+        XCTAssertNil(Browsers.gatekeeperID(inPreferences: only02), "the test build leaves the 0.2 extension alone")
+    }
+
+    func testTheBridgeRemembersTheBrowserThatCalled() {
+        let dir = FileManager.default.temporaryDirectory.appendingPathComponent("gk-caller-\(UUID().uuidString)")
+        setenv("GATEKEEPER_FOLDER", dir.path, 1)
+        defer { unsetenv("GATEKEEPER_FOLDER"); try? FileManager.default.removeItem(at: dir) }
+        let snap: [String: Any] = ["type": "snapshot", "v": 1, "at": 1, "reopensAt": 9e12, "kinds": [],
+                                   "base": "safari-web-extension://1234-abcd/"]
+        _ = BridgeCore.handle(snap, callerID: nil, browser: "com.apple.Safari", appVersion: nil)
+        XCTAssertEqual(NativeHost.loadCaller(), .init(browser: "com.apple.Safari", extensionId: nil, base: "safari-web-extension://1234-abcd/"))
+    }
+}

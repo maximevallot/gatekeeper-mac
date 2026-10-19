@@ -14,6 +14,8 @@ enum Identity {
     /// The 0.3 extension loaded unpacked from ~/gatekeeper-app-0.3/extension (its ID comes from that path).
     static let extensionIDs = ["hkghdhjbbcokmgaaldcfpojbcahajbhe"]
     static let extensionPathSuffixes = ["/gatekeeper-app-0.3/extension"]
+    /// A store or packed build records its manifest name; an unpacked one often does not.
+    static let extensionNamePrefixes = ["Gatekeeper 0.3"]
     /// The staging relay, separate from the one 0.2 and the store build use.
     static let relay = "https://gatekeeper-relay-staging.mvallot22.workers.dev"
     /// The test build does not add itself to Login Items, so it never starts beside 0.2 at login.

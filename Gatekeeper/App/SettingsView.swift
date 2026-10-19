@@ -63,7 +63,7 @@ struct SettingsView: View {
                         .font(Theme.font(12)).foregroundStyle(Theme.muted)
                         .fixedSize(horizontal: false, vertical: true)
                 } else {
-                    Text("Not joined. Open the menu-bar popup and type the code from Settings › Add a device in your browser.")
+                    Text("Not joined. In your browser's Gatekeeper, click Add a device on Today, then type its code in the menu-bar popup.")
                         .font(Theme.font(14)).fixedSize(horizontal: false, vertical: true)
                 }
             }

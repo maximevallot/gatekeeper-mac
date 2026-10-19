@@ -29,7 +29,7 @@ struct PopupView: View {
 }
 
 /// This Mac has not joined a Gatekeeper account. It has no rules of its own, so it asks for the 6-digit code another
-/// device of the account shows under Settings › Add a device. A browser of the account can also hand the code over
+/// device of the account shows under Add a device. A browser of the account can also hand the code over
 /// itself, through native messaging.
 struct JoinView: View {
     @EnvironmentObject var model: AppModel
@@ -45,7 +45,7 @@ struct JoinView: View {
             }
 
             Text("Join your Gatekeeper").font(Theme.font(15, .semibold))
-            Text("In Gatekeeper in your browser, open Settings › Add a device, and type the 6-digit code here.")
+            Text("In Gatekeeper in your browser, click Add a device on Today (or All rules › Your Gatekeeper › Add a device), then type the 6-digit code here.")
                 .font(Theme.font(13)).foregroundStyle(Theme.muted)
                 .fixedSize(horizontal: false, vertical: true)
 

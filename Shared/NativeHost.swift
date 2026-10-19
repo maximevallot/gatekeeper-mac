@@ -61,6 +61,28 @@ enum NativeHost {
         return code
     }
 
+    /// The browser and extension that last talked to the Mac (extension.json), so the Mac can open the extension's
+    /// pages even before it finds the extension in the browser's own settings, and in Safari, whose address
+    /// (safari-web-extension://<uuid>/) no settings file gives.
+    struct Caller: Codable, Equatable {
+        var browser: String
+        var extensionId: String?
+        var base: String?
+    }
+
+    static var callerFile: URL { folder.appendingPathComponent("extension.json") }
+
+    static func saveCaller(_ c: Caller) {
+        guard c != loadCaller(), let data = try? JSONEncoder().encode(c) else { return }
+        try? FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
+        try? data.write(to: callerFile, options: .atomic)
+    }
+
+    static func loadCaller() -> Caller? {
+        guard let data = try? Data(contentsOf: callerFile) else { return nil }
+        return try? JSONDecoder().decode(Caller.self, from: data)
+    }
+
     /// The Mac has joined the account (account.json exists).
     static var macJoined: Bool { FileManager.default.fileExists(atPath: folder.appendingPathComponent("account.json").path) }
 

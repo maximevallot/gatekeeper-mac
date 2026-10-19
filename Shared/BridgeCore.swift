@@ -37,6 +37,10 @@ enum BridgeCore {
             return refuse("bad_message", ["reason": String(describing: error).prefix(300).description])
         }
 
+        if let b = (raw["browser"] as? String) ?? browser {
+            let id = (raw["extensionId"] as? String) ?? callerID
+            NativeHost.saveCaller(.init(browser: b, extensionId: id, base: raw["base"] as? String))
+        }
         if let code = raw["pairCode"] as? String, code.count == 6, code.allSatisfy(\.isNumber), !NativeHost.macJoined {
             NativeHost.savePairCode(code)
         }
