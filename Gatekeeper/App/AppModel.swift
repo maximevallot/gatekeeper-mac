@@ -304,7 +304,7 @@ final class AppModel: ObservableObject {
         case let .badCode(reason):
             switch reason {
             case "too_many_codes", "daily_limit": return "Too many tries for now. Wait a little, then get a new code."
-            default: return "That code didn't work: it may be wrong, used or older than 10 minutes. Get a new one with Add a device."
+            default: return "That code didn't work: it may be wrong, used or older than 10 minutes. Get a new one: in the browser, toolbar button › Add a device."
             }
         case .removed: return "This Mac was removed from your Gatekeeper. Join again with a code."
         case .unreachable: return "Can't reach your Gatekeeper. Check the internet connection."

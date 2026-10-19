@@ -40,7 +40,7 @@ count, so turn 0.2 off while testing:
 4. Safari › Settings › Developer: **Allow unsigned extensions** (again after any Safari restart), then Extensions:
    tick **Gatekeeper 0.3 (test)** and set Edit Websites… › Other websites to **Allow**.
 5. Set up Gatekeeper in Brave, then in Safari choose "Already use Gatekeeper?" with the code from Brave's
-   **Add a device** (on Today, or All rules › Your Gatekeeper). Join the Mac app the same way: click the arch, type a fresh code.
+   **Add a device** (the browser's Gatekeeper toolbar button, or the card at the end of its welcome). Join the Mac app the same way: click the arch, type a fresh code.
 
 To go back: quit 0.3 (■ in its Xcode window), untick it in Safari, turn the 0.2 extension back on in Brave and
 Safari, run 0.2 from its Xcode window, and tick Open at login again.
@@ -51,8 +51,8 @@ Since 0.3 there is one Gatekeeper per person: an account that every browser and 
 rules of its own; it shows the account's Today and hides apps in exam mode.
 
 1. Set up Gatekeeper in a browser first (Brave, Chrome or Safari). Finishing its welcome creates your Gatekeeper.
-2. In that browser, click **Add a device** on Gatekeeper's Today (or All rules › Your Gatekeeper › Add a device).
-   It shows a 6-digit code for 10 minutes.
+2. In that browser, click Gatekeeper's toolbar button, then **Add a device** (the end of the welcome also shows
+   one). It shows a 6-digit code that works once, for 10 minutes.
 3. Click the arch in the menu bar and type the code under **Join your Gatekeeper**.
 
 If the browser has Mac app turned on, it hands the code to the Mac by itself and step 3 happens alone.

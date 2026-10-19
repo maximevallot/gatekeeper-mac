@@ -45,7 +45,7 @@ struct JoinView: View {
             }
 
             Text("Join your Gatekeeper").font(Theme.font(15, .semibold))
-            Text("In Gatekeeper in your browser, click Add a device on Today (or All rules › Your Gatekeeper › Add a device), then type the 6-digit code here.")
+            Text("On a browser that has Gatekeeper, click its toolbar button, then Add a device. Type the 6-digit code here.")
                 .font(Theme.font(13)).foregroundStyle(Theme.muted)
                 .fixedSize(horizontal: false, vertical: true)
 
